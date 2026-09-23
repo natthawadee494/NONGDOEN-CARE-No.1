@@ -257,7 +257,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
             className="rounded-3xl bg-rose-100 border-2 border-rose-400 overflow-hidden flex items-center justify-center font-black text-rose-700 text-3xl shrink-0 shadow-md transition-all relative group"
           >
             {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+              <img src={avatarUrl} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/assets/thai_boy_notie.jpg'; }} />
             ) : (
               firstName.slice(0, 1) || 'N'
             )}
@@ -525,7 +525,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                   className="rounded-2xl bg-rose-100 border-2 border-rose-400 flex items-center justify-center text-rose-700 font-bold overflow-hidden shadow-xs transition-all"
                 >
                   {avatarUrl ? (
-                    <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                    <img src={avatarUrl} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/assets/thai_boy_notie.jpg'; }} />
                   ) : (
                     firstName.slice(0, 1) || 'N'
                   )}
