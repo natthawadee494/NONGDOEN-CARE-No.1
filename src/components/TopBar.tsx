@@ -150,7 +150,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               >
                 <div className="w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden">
                   {currentUser.avatarUrl ? (
-                    <img src={currentUser.avatarUrl} alt="" className="w-full h-full object-cover" />
+                    <img src={currentUser.avatarUrl} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/assets/thai_boy_notie.jpg'; }} />
                   ) : (
                     <span>{currentUser.firstName.slice(0, 1)}</span>
                   )}
