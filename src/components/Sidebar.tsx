@@ -163,7 +163,7 @@ export const Sidebar: React.FC<NavigationProps> = ({
               <div className="relative shrink-0">
                 <div className="w-10 h-10 rounded-xl bg-slate-900 border-2 border-white shadow-sm flex items-center justify-center text-white font-bold text-sm overflow-hidden">
                   {currentUser?.avatarUrl ? (
-                    <img src={currentUser.avatarUrl} alt="" className="w-full h-full object-cover" />
+                    <img src={currentUser.avatarUrl} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/assets/thai_boy_notie.jpg'; }} />
                   ) : (
                     <span>
                       {currentUser?.nickname?.slice(0, 1) ||
