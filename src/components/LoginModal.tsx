@@ -31,13 +31,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [activeTab, setActiveTab] = useState<'teacher' | 'student'>('teacher');
 
   // Teacher inputs
-  const [teacherEmailOrPhone, setTeacherEmailOrPhone] = useState('teacher.care@nsw.ac.th');
-  const [teacherPassword, setTeacherPassword] = useState('123456');
+  const [teacherEmailOrPhone, setTeacherEmailOrPhone] = useState('');
+  const [teacherPassword, setTeacherPassword] = useState('');
 
   // Student inputs
   const [studentRoom, setStudentRoom] = useState('ป.1');
   const [studentNumber, setStudentNumber] = useState('1');
-  const [studentEmail, setStudentEmail] = useState('nongdoen@nsw.ac.th');
+  const [studentEmail, setStudentEmail] = useState('');
 
   if (!isOpen) return null;
 
