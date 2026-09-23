@@ -85,9 +85,9 @@ export default function App() {
         setAppState((prev) => ({
           ...prev,
           ...remote,
-          currentUser: remote.currentUser ?? prev.currentUser,
-          activeTab: remote.currentUser ? (remote.currentUser.role === 'student' ? 'student-portal' : 'home') : prev.activeTab,
-          currentRoom: remote.currentUser?.role === 'student' && remote.currentUser.room ? remote.currentUser.room : (prev.currentRoom || remote.currentRoom || 'ป.1'),
+          currentUser: prev.currentUser,
+          activeTab: prev.activeTab,
+          currentRoom: prev.currentRoom || remote.currentRoom || 'ป.1',
         }));
       }
 
@@ -196,14 +196,19 @@ export default function App() {
   // Login handler
   const handleLogin = (user: User) => {
     setAppState((prev) => {
-      const exists = prev.users.some((u) => u.id === user.id);
-      return {
+      const nextUsers = prev.users.some((u) => u.id === user.id)
+        ? prev.users.map((u) => (u.id === user.id ? user : u))
+        : [...prev.users, user];
+      const nextState = {
         ...prev,
         currentUser: user,
         currentRoom: user.role === 'student' && user.room ? user.room : prev.currentRoom,
-        users: exists ? prev.users : [...prev.users, user],
+        users: nextUsers,
         activeTab: user.role === 'student' ? 'student-portal' : 'home',
       };
+      void saveCloudState(nextState);
+      void registerCloudUser(user);
+      return nextState;
     });
     setIsLoginModalOpen(false);
     void logCloudEvent('LOGIN', user, { source: 'web' });
@@ -529,10 +534,14 @@ export default function App() {
   const handleUpdateUser = (updated: Partial<User>) => {
     if (!appState.currentUser) return;
     const nextUser = { ...appState.currentUser, ...updated };
-    setAppState((prev) => ({
+    setAppState((prev) => {
+      const nextUsers = prev.users.some((u) => u.id === nextUser.id)
+        ? prev.users.map((u) => (u.id === nextUser.id ? nextUser : u))
+        : [...prev.users, nextUser];
+      const nextState = {
       ...prev,
       currentUser: nextUser,
-      users: prev.users.map((u) => (u.id === nextUser.id ? nextUser : u)),
+      users: nextUsers,
       students:
         nextUser.role === 'student'
           ? prev.students.map((st) =>
@@ -552,9 +561,11 @@ export default function App() {
                 : st
             )
           : prev.students,
-    }));
-    void saveCloudState({ ...appState, currentUser: nextUser, users: appState.users.map((u) => (u.id === nextUser.id ? nextUser : u)) } as AppState);
-    void registerCloudUser(nextUser);
+      };
+      void saveCloudState(nextState);
+      void registerCloudUser(nextUser);
+      return nextState;
+    });
     showToast('บันทึกข้อมูลส่วนตัวเรียบร้อย');
   };
 
