@@ -32,24 +32,51 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const [room, setRoom] = useState('ป.1');
   const [number, setNumber] = useState(1);
 
-  if (!isOpen) return null;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (role === 'teacher') {
+      const normalizedEmail = email.trim().toLowerCase();
+      if (!normalizedEmail) return;
+
+      try {
+        const { loadCloudUsers } = await import('../utils/cloudSync');
+        const cloudUsers = await loadCloudUsers();
+        const teacher = cloudUsers.find(
+          (u) =>
+            u.role === 'teacher' &&
+            (u.email || '').trim().toLowerCase() === normalizedEmail
+        );
+
+        if (!teacher) {
+          alert('ไม่พบอีเมลครูในระบบ กรุณาแจ้งผู้ดูแลระบบเพิ่มอีเมลครูก่อน');
+          return;
+        }
+
+        onRegister(teacher);
+        playSuccess();
+        triggerConfetti();
+        onClose();
+      } catch {
+        alert('ไม่สามารถตรวจสอบอีเมลครูได้ กรุณาลองใหม่อีกครั้ง');
+      }
+      return;
+    }
+
     if (!firstName.trim() || !lastName.trim()) return;
 
     const newUser: User = {
       id: `usr-${role}-${Date.now()}`,
-      role: role, // Directly determined without prompt or picker
-      prefix: prefix,
+      role,
+      prefix,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       nickname: nickname.trim() || undefined,
       email: email.trim() || undefined,
       phone: undefined,
-      room: room,
-      number: role === 'student' ? Number(number) || 1 : undefined,
-      exp: role === 'student' ? 100 : undefined,
+      room,
+      number: Number(number) || 1,
+      exp: 100,
       themeColor: 'rose',
       avatarSize: 96,
       passwordHash: undefined,
@@ -215,6 +242,157 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               <span>ยืนยันการลงทะเบียน</span>
             </button>
           </div>
+        </form>
+
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          {role === 'teacher' ? (
+            <div className="space-y-2">
+              <label className="block font-bold text-slate-700">อีเมลครู: *</label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="teacher@nsw.ac.th"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-3 font-medium focus:bg-white focus:border-rose-500 focus:outline-hidden"
+                />
+              </div>
+            </div>
+          ) : (
+          {/* Prefix + First Name + Last Name */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <label className="block font-bold text-slate-700">คำนำหน้า: *</label>
+              {role === 'teacher' ? (
+                <select
+                  value={prefix}
+                  onChange={(e) => setPrefix(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold focus:bg-white focus:border-rose-500 focus:outline-hidden"
+                >
+                  <option value="คุณครู">คุณครู</option>
+                  <option value="นาย">นาย</option>
+                  <option value="นาง">นาง</option>
+                  <option value="นางสาว">นางสาว</option>
+                </select>
+              ) : (
+                <select
+                  value={prefix}
+                  onChange={(e) => setPrefix(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold focus:bg-white focus:border-rose-500 focus:outline-hidden"
+                >
+                  <option value="เด็กชาย">เด็กชาย (ด.ช.)</option>
+                  <option value="เด็กหญิง">เด็กหญิง (ด.ญ.)</option>
+                  <option value="นาย">นาย</option>
+                  <option value="นางสาว">นางสาว</option>
+                </select>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <label className="block font-bold text-slate-700">ชื่อจริง: *</label>
+              <input
+                type="text"
+                required
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="ระบุชื่อจริง"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-medium focus:bg-white focus:border-rose-500 focus:outline-hidden"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block font-bold text-slate-700">นามสกุล: *</label>
+              <input
+                type="text"
+                required
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="ระบุนามสกุล"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-medium focus:bg-white focus:border-rose-500 focus:outline-hidden"
+              />
+            </div>
+          </div>
+
+          {/* Nickname + Room */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="block font-bold text-slate-700">ชื่อเล่น:</label>
+              <input
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="เช่น แคร์ / น้องเดิ่น"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-medium focus:bg-white focus:border-rose-500 focus:outline-hidden"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block font-bold text-slate-700">
+                {role === 'teacher' ? 'ห้องเรียนประจำชั้นที่ดูแล: *' : 'ระดับชั้นเรียน: *'}
+              </label>
+              <select
+                value={room}
+                onChange={(e) => setRoom(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold focus:bg-white focus:border-rose-500 focus:outline-hidden"
+              >
+                {['อ.1', 'อ.2', 'อ.3', 'ป.1', 'ป.2', 'ป.3', 'ป.4', 'ป.5', 'ป.6'].map((r) => (
+                  <option key={r} value={r}>
+                    ชั้น {r}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Student Number (only for students) */}
+          {role === 'student' && (
+            <div className="space-y-1">
+              <label className="block font-bold text-slate-700">เลขที่ในห้องเรียน: *</label>
+              <input
+                type="number"
+                required
+                min={1}
+                value={number}
+                onChange={(e) => setNumber(Number(e.target.value))}
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold focus:bg-white focus:border-rose-500 focus:outline-hidden"
+              />
+            </div>
+          )}
+
+          {/* Email */}
+          <div className="space-y-1">
+            <label className="block font-bold text-slate-700">อีเมลสำหรับเข้าสู่ระบบ: *</label>
+            <div className="relative">
+              <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@nsw.ac.th"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2.5 font-medium focus:bg-white focus:border-rose-500 focus:outline-hidden"
+              />
+            </div>
+            <p className="text-[11px] text-slate-500">ใช้เฉพาะอีเมลในการเข้าสู่ระบบ</p>
+          </div>
+
+          {/* Submit button */}
+          <div className="pt-2 flex flex-col gap-2">
+            <button
+              type="submit"
+              className="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>ยืนยันการลงทะเบียน</span>
+            </button>
+          </div>
+        </form>
+
+
+          )}
         </form>
 
         {/* Back to login */}
