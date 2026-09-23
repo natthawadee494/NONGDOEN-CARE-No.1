@@ -320,7 +320,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
                       >
                         <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden border border-rose-200 group-hover:scale-105 transition-transform">
                           {std.avatarUrl ? (
-                            <img src={std.avatarUrl} alt="" className="w-full h-full object-cover" />
+                            <img src={std.avatarUrl} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/assets/thai_boy_notie.jpg'; }} />
                           ) : (
                             std.firstName.slice(0, 1)
                           )}
