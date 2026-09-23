@@ -17,6 +17,7 @@ interface LoginModalProps {
   onClose: () => void;
   onLogin: (user: User) => void;
   onOpenRegister: (rolePreset: 'teacher' | 'student') => void;
+  existingUsers: User[];
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({
@@ -24,6 +25,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   onClose,
   onLogin,
   onOpenRegister,
+  existingUsers,
 }) => {
   const [activeTab, setActiveTab] = useState<'teacher' | 'student'>('teacher');
 
@@ -40,32 +42,44 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   const handleTeacherSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    playSuccess();
-    triggerConfetti();
-
-    // Check if matches demo teacher or create dynamic session
-    const user: User = {
-      ...DEMO_TEACHER,
-      email: teacherEmailOrPhone.includes('@') ? teacherEmailOrPhone : DEMO_TEACHER.email,
-      phone: !teacherEmailOrPhone.includes('@') ? teacherEmailOrPhone : DEMO_TEACHER.phone,
-    };
-    onLogin(user);
-    onClose();
+    const key = teacherEmailOrPhone.trim().toLowerCase();
+    const user = existingUsers.find((u) =>
+      u.role === 'teacher' &&
+      ((u.email || '').trim().toLowerCase() === key ||
+       (u.phone || '').replace(/\D/g, '') === key.replace(/\D/g, '') ||
+       (u.login || '').replace(/\D/g, '') === key.replace(/\D/g, ''))
+    );
+    if (!user) {
+      alert('ไม่พบบัญชีครูนี้ กรุณาใช้บัญชีที่ลงทะเบียนไว้');
+      return;
+    }
+    if (user.passwordHash) {
+      import('../utils/auth').then(async ({ hashPassword }) => {
+        const ok = user.passwordHash === await hashPassword(teacherPassword);
+        if (!ok) { alert('รหัสผ่านไม่ถูกต้อง'); return; }
+        playSuccess(); triggerConfetti(); onLogin(user); onClose();
+      });
+      return;
+    }
+    playSuccess(); triggerConfetti(); onLogin(user); onClose();
   };
 
   const handleStudentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    playSuccess();
-    triggerConfetti();
-
-    const user: User = {
-      ...DEMO_STUDENT,
-      room: studentRoom,
-      number: Number(studentNumber) || 1,
-      email: studentEmail || DEMO_STUDENT.email,
-    };
-    onLogin(user);
-    onClose();
+    const room = studentRoom.trim();
+    const number = Number(studentNumber) || 1;
+    const key = studentEmail.trim().toLowerCase();
+    const user = existingUsers.find((u) =>
+      u.role === 'student' &&
+      u.room === room &&
+      Number(u.number) === number &&
+      (!key || (u.email || '').trim().toLowerCase() === key || (u.nickname || '').trim().toLowerCase() === key)
+    );
+    if (!user) {
+      alert('ไม่พบบัญชีนักเรียนนี้ กรุณาตรวจสอบชั้น/เลขที่/อีเมลหรือชื่อเล่น');
+      return;
+    }
+    playSuccess(); triggerConfetti(); onLogin(user); onClose();
   };
 
   return (
