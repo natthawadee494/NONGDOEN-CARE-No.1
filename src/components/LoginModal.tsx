@@ -11,6 +11,7 @@ import {
 import { User } from '../types';
 import { playClick, playSuccess, triggerConfetti } from '../utils/audio';
 import { DEMO_TEACHER, DEMO_STUDENT } from '../utils/storage';
+import { loadCloudUsers } from '../utils/cloudSync';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -40,10 +41,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleTeacherSubmit = (e: React.FormEvent) => {
+  const handleTeacherSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const key = teacherEmailOrPhone.trim().toLowerCase();
-    const user = existingUsers.find((u) =>
+    const cloudUsers = await loadCloudUsers();
+    const users = cloudUsers.length ? cloudUsers : existingUsers;
+    const user = users.find((u) =>
       u.role === 'teacher' &&
       ((u.email || '').trim().toLowerCase() === key ||
        (u.phone || '').replace(/\D/g, '') === key.replace(/\D/g, '') ||
@@ -64,12 +67,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     playSuccess(); triggerConfetti(); onLogin(user); onClose();
   };
 
-  const handleStudentSubmit = (e: React.FormEvent) => {
+  const handleStudentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const room = studentRoom.trim();
     const number = Number(studentNumber) || 1;
     const key = studentEmail.trim().toLowerCase();
-    const user = existingUsers.find((u) =>
+    const cloudUsers = await loadCloudUsers();
+    const users = cloudUsers.length ? cloudUsers : existingUsers;
+    const user = users.find((u) =>
       u.role === 'student' &&
       u.room === room &&
       Number(u.number) === number &&
