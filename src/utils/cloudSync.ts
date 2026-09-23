@@ -86,3 +86,30 @@ export async function logCloudEvent(action: string, user: User | null, details: 
     });
   } catch {}
 }
+
+
+export async function loadCloudUsers(): Promise<User[]> {
+  if (typeof window === 'undefined') return [];
+  try {
+    const result = await fetchJson(`${APPS_SCRIPT_URL}?action=getUsers&_=${Date.now()}`);
+    return Array.isArray(result?.data) ? result.data as User[] : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function registerCloudUser(user: User): Promise<void> {
+  if (typeof window === 'undefined') return;
+  const payload = JSON.stringify(user);
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: new URLSearchParams({ action: 'registerUser', payload }).toString(),
+      keepalive: true,
+    });
+  } catch (error) {
+    console.warn('NSW CARE account save failed.', error);
+  }
+}
