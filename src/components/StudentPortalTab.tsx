@@ -139,7 +139,7 @@ export const StudentPortalTab: React.FC<StudentPortalTabProps> = ({
             className="rounded-2xl bg-pink-600 flex items-center justify-center text-white text-2xl font-black shadow-lg overflow-hidden border-2 border-pink-300 shrink-0 transition-all"
           >
             {activeStudent.avatarUrl ? (
-              <img src={activeStudent.avatarUrl} alt="" className="w-full h-full object-cover" />
+              <img src={activeStudent.avatarUrl} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/assets/thai_boy_notie.jpg'; }} />
             ) : (
               activeStudent.firstName.slice(0, 1) || 'น'
             )}
