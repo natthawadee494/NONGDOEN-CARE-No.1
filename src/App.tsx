@@ -734,6 +734,7 @@ export default function App() {
         onClose={() => setIsLoginModalOpen(false)}
         onLogin={handleLogin}
         onOpenRegister={handleOpenRegister}
+        existingUsers={appState.users}
       />
 
       <RegisterModal
