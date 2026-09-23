@@ -32,7 +32,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   // Teacher inputs
   const [teacherEmailOrPhone, setTeacherEmailOrPhone] = useState('');
-  const [teacherPassword, setTeacherPassword] = useState('');
 
   // Student inputs
   const [studentRoom, setStudentRoom] = useState('ป.1');
@@ -43,28 +42,21 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   const handleTeacherSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const key = teacherEmailOrPhone.trim().toLowerCase();
+    const email = teacherEmailOrPhone.trim().toLowerCase();
     const cloudUsers = await loadCloudUsers();
     const users = cloudUsers.length ? cloudUsers : existingUsers;
     const user = users.find((u) =>
       u.role === 'teacher' &&
-      ((u.email || '').trim().toLowerCase() === key ||
-       (u.phone || '').replace(/\D/g, '') === key.replace(/\D/g, '') ||
-       (u.login || '').replace(/\D/g, '') === key.replace(/\D/g, ''))
+      (u.email || '').trim().toLowerCase() === email
     );
     if (!user) {
-      alert('ไม่พบบัญชีครูนี้ กรุณาใช้บัญชีที่ลงทะเบียนไว้');
+      alert('ไม่พบอีเมลครูในระบบ กรุณาตรวจสอบอีเมลอีกครั้ง');
       return;
     }
-    if (user.passwordHash) {
-      import('../utils/auth').then(async ({ hashPassword }) => {
-        const ok = user.passwordHash === await hashPassword(teacherPassword);
-        if (!ok) { alert('รหัสผ่านไม่ถูกต้อง'); return; }
-        playSuccess(); triggerConfetti(); onLogin(user); onClose();
-      });
-      return;
-    }
-    playSuccess(); triggerConfetti(); onLogin(user); onClose();
+    playSuccess();
+    triggerConfetti();
+    onLogin(user);
+    onClose();
   };
 
   const handleStudentSubmit = async (e: React.FormEvent) => {
@@ -146,7 +138,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           <form onSubmit={handleTeacherSubmit} className="space-y-4 text-xs">
             <div className="space-y-1">
               <label className="block font-bold text-slate-700">
-                อีเมลประจำตัวครู (หรือเบอร์โทรศัพท์): *
+                อีเมลครู: *
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -155,25 +147,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   required
                   value={teacherEmailOrPhone}
                   onChange={(e) => setTeacherEmailOrPhone(e.target.value)}
-                  placeholder="เช่น teacher.care@nsw.ac.th หรือ 0910610997"
+                  placeholder="เช่น teacher.care@nsw.ac.th"
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2.5 font-medium text-slate-800 focus:bg-white focus:border-rose-500 focus:outline-hidden"
                 />
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="block font-bold text-slate-700">รหัสผ่าน: *</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                <input
-                  type="password"
-                  required
-                  value={teacherPassword}
-                  onChange={(e) => setTeacherPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2.5 font-medium text-slate-800 focus:bg-white focus:border-rose-500 focus:outline-hidden"
-                />
-              </div>
+            <div className="hidden">
             </div>
 
             <div className="pt-1 flex flex-col gap-2">
