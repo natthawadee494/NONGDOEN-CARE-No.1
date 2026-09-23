@@ -92,14 +92,31 @@ export async function loadCloudUsers(): Promise<User[]> {
   if (typeof window === 'undefined') return [];
   try {
     const result = await fetchJson(`${APPS_SCRIPT_URL}?action=getUsers&_=${Date.now()}`);
-    return Array.isArray(result?.data) ? result.data as User[] : [];
+    if (Array.isArray(result?.data)) {
+      localStorage.setItem('nongdoen_care_cloud_users_v1', JSON.stringify(result.data));
+      return result.data as User[];
+    }
   } catch {
-    return [];
+    // Fall back to the last successful cloud user list.
   }
+  try {
+    const cached = localStorage.getItem('nongdoen_care_cloud_users_v1');
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed)) return parsed as User[];
+    }
+  } catch {}
+  return [];
 }
 
 export async function registerCloudUser(user: User): Promise<void> {
   if (typeof window === 'undefined') return;
+  try {
+    const raw = localStorage.getItem('nongdoen_care_cloud_users_v1');
+    const users: User[] = raw ? JSON.parse(raw) : [];
+    const next = [...users.filter(existing => existing.id !== user.id), user];
+    localStorage.setItem('nongdoen_care_cloud_users_v1', JSON.stringify(next));
+  } catch {}
   const payload = JSON.stringify(user);
   try {
     await fetch(APPS_SCRIPT_URL, {
