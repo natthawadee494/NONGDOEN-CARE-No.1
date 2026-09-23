@@ -9,7 +9,7 @@ function getSpreadsheet() {
 const SCHEMAS = {
   Users: [
     'UserId','Role','Login','Email','Prefix','FirstName','LastName',
-    'Nickname','Room','Number','Phone','Bio','EXP','AvatarUrl','AvatarSize','ThemeColor'
+    'Nickname','Room','Number','Phone','Bio','EXP','AvatarUrl','AvatarSize','ThemeColor','PasswordHash'
   ],
   Students: [
     'StudentId','Prefix','FirstName','LastName','Nickname','Room','Number',
@@ -82,6 +82,13 @@ function doGet(e) {
     }, e);
   }
 
+  if (action === 'getUsers') {
+    return respond({
+      success: true,
+      data: readUsers()
+    }, e);
+  }
+
   if (action === 'assignments') {
     const state = getSavedState();
     return respond({
@@ -113,6 +120,17 @@ function doPost(e) {
         success: true,
         message: 'NSW CARE data saved',
         updatedAt: new Date().toISOString(),
+      }, e);
+    }
+
+    if (action === 'registerUser') {
+      if (!payloadText) throw new Error('Missing user payload');
+      const user = JSON.parse(payloadText);
+      registerUser(user);
+      return respond({
+        success: true,
+        message: 'Account saved',
+        userId: user.id || ''
       }, e);
     }
 
@@ -254,10 +272,81 @@ function writeUsers(ss, users) {
       u.avatarUrl || '',
       u.avatarSize || '',
       u.themeColor || '',
+      u.passwordHash || '',
     ];
   });
 
   replaceTable(ss, 'Users', SCHEMAS.Users, rows);
+}
+
+function registerUser(user) {
+  const ss = getSpreadsheet();
+  const sheet = getOrCreateSheet(ss, 'Users', SCHEMAS.Users);
+
+  const row = [
+    user.id || '',
+    user.role || '',
+    user.login || '',
+    user.email || '',
+    user.prefix || '',
+    user.firstName || '',
+    user.lastName || '',
+    user.nickname || '',
+    user.room || '',
+    user.number == null ? '' : user.number,
+    user.phone || '',
+    user.bio || '',
+    user.exp == null ? '' : user.exp,
+    user.avatarUrl || '',
+    user.avatarSize == null ? '' : user.avatarSize,
+    user.themeColor || '',
+    user.passwordHash || ''
+  ];
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow >= 2 && user.id) {
+    const ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    for (let i = 0; i < ids.length; i++) {
+      if (String(ids[i][0]) === String(user.id)) {
+        sheet.getRange(i + 2, 1, 1, row.length).setValues([row]);
+        return;
+      }
+    }
+  }
+
+  sheet.getRange(sheet.getLastRow() + 1, 1, 1, row.length).setValues([row]);
+  SpreadsheetApp.flush();
+}
+
+function readUsers() {
+  const ss = getSpreadsheet();
+  const sheet = ss.getSheetByName('Users');
+  if (!sheet || sheet.getLastRow() < 2) return [];
+
+  const width = SCHEMAS.Users.length;
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, width).getValues();
+
+  return values
+    .filter(row => row.some(v => String(v || '').trim() !== ''))
+    .map(row => ({
+      id: String(row[0] || ''),
+      role: row[1] || 'student',
+      login: row[2] || undefined,
+      email: row[3] || undefined,
+      prefix: row[4] || '',
+      firstName: row[5] || '',
+      lastName: row[6] || '',
+      nickname: row[7] || undefined,
+      room: row[8] || undefined,
+      number: row[9] === '' ? undefined : Number(row[9]),
+      phone: row[10] || undefined,
+      bio: row[11] || undefined,
+      exp: row[12] === '' ? undefined : Number(row[12]),
+      avatarUrl: row[13] || undefined,
+      avatarSize: row[14] === '' ? undefined : Number(row[14]),
+      themeColor: row[15] || undefined,
+      passwordHash: row[16] || undefined
+    }));
 }
 
 function writeStudents(ss, students) {
