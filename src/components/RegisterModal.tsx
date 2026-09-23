@@ -2,15 +2,12 @@ import React, { useState } from 'react';
 import {
   UserPlus,
   Mail,
-  Lock,
-  Phone,
   ArrowLeft,
   Sparkles,
   Save,
 } from 'lucide-react';
 import { User, UserRole } from '../types';
 import { playClick, playSuccess, triggerConfetti } from '../utils/audio';
-import { hashPassword } from '../utils/auth';
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -32,23 +29,14 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const [lastName, setLastName] = useState('');
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [room, setRoom] = useState('ป.1');
   const [number, setNumber] = useState(1);
-  const [password, setPassword] = useState('');
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firstName.trim() || !lastName.trim()) return;
-
-    if (password.trim().length < 6) {
-      alert('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
-      return;
-    }
-
-    const passwordHash = await hashPassword(password.trim());
 
     const newUser: User = {
       id: `usr-${role}-${Date.now()}`,
@@ -58,13 +46,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       lastName: lastName.trim(),
       nickname: nickname.trim() || undefined,
       email: email.trim() || undefined,
-      phone: phone.trim() || undefined,
+      phone: undefined,
       room: room,
       number: role === 'student' ? Number(number) || 1 : undefined,
       exp: role === 'student' ? 100 : undefined,
       themeColor: 'rose',
       avatarSize: 96,
-      passwordHash,
+      passwordHash: undefined,
     };
 
     onRegister(newUser);
@@ -97,16 +85,6 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
           >
             ✕
           </button>
-        </div>
-
-        {/* Note indicating dedicated registration form */}
-        <div className="px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 text-[11px] text-rose-800 font-semibold flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-rose-600 shrink-0" />
-          <span>
-            {role === 'teacher'
-              ? 'แบบฟอร์มลงทะเบียนสำหรับคุณครูประจำชั้นและผู้ดูแลระบบ'
-              : 'แบบฟอร์มลงทะเบียนสำหรับนักเรียนประจำห้องเรียน'}
-          </span>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
@@ -210,54 +188,21 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             </div>
           )}
 
-          {/* Email + Phone */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="block font-bold text-slate-700">
-                {role === 'teacher' ? 'อีเมลสำหรับเข้าสู่ระบบ: *' : 'อีเมลนักเรียน / ผู้ปกครอง:'}
-              </label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                <input
-                  type="email"
-                  required={role === 'teacher'}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@nsw.ac.th"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2.5 font-medium focus:bg-white focus:border-rose-500 focus:outline-hidden"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="block font-bold text-slate-700">เบอร์โทรศัพท์ติดต่อ:</label>
-              <div className="relative">
-                <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="08X-XXX-XXXX"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2.5 font-medium focus:bg-white focus:border-rose-500 focus:outline-hidden"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Password */}
+          {/* Email */}
           <div className="space-y-1">
-            <label className="block font-bold text-slate-700">รหัสผ่านสำหรับเข้าใช้งาน: *</label>
+            <label className="block font-bold text-slate-700">อีเมลสำหรับเข้าสู่ระบบ: *</label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
               <input
-                type="password"
+                type="email"
                 required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="กำหนดรหัสผ่านอย่างน้อย 6 ตัวอักษร"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@nsw.ac.th"
                 className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2.5 font-medium focus:bg-white focus:border-rose-500 focus:outline-hidden"
               />
             </div>
+            <p className="text-[11px] text-slate-500">ใช้เฉพาะอีเมลในการเข้าสู่ระบบ</p>
           </div>
 
           {/* Submit button */}
