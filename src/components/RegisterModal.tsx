@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { User, UserRole } from '../types';
 import { playClick, playSuccess, triggerConfetti } from '../utils/audio';
+import { hashPassword } from '../utils/auth';
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -38,9 +39,16 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firstName.trim() || !lastName.trim()) return;
+
+    if (password.trim().length < 6) {
+      alert('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
+      return;
+    }
+
+    const passwordHash = await hashPassword(password.trim());
 
     const newUser: User = {
       id: `usr-${role}-${Date.now()}`,
@@ -56,6 +64,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       exp: role === 'student' ? 100 : undefined,
       themeColor: 'rose',
       avatarSize: 96,
+      passwordHash,
     };
 
     onRegister(newUser);
