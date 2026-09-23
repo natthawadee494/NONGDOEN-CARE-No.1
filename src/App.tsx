@@ -85,9 +85,9 @@ export default function App() {
         setAppState((prev) => ({
           ...prev,
           ...remote,
-          currentUser: prev.currentUser,
-          activeTab: prev.activeTab,
-          currentRoom: prev.currentRoom || remote.currentRoom || 'ป.1',
+          currentUser: remote.currentUser ?? prev.currentUser,
+          activeTab: remote.currentUser ? (remote.currentUser.role === 'student' ? 'student-portal' : 'home') : prev.activeTab,
+          currentRoom: remote.currentUser?.role === 'student' && remote.currentUser.room ? remote.currentUser.room : (prev.currentRoom || remote.currentRoom || 'ป.1'),
         }));
       }
 
@@ -553,6 +553,8 @@ export default function App() {
             )
           : prev.students,
     }));
+    void saveCloudState({ ...appState, currentUser: nextUser, users: appState.users.map((u) => (u.id === nextUser.id ? nextUser : u)) } as AppState);
+    void registerCloudUser(nextUser);
     showToast('บันทึกข้อมูลส่วนตัวเรียบร้อย');
   };
 
