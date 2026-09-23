@@ -16,10 +16,11 @@ export interface CloudState {
   subjects: Subject[];
   users: User[];
   sheetsConfig: GoogleSheetsConfig;
+  currentUser: User | null;
 }
 
 function getCloudState(state: AppState): CloudState {
-  return { rooms: state.rooms, students: state.students, assignments: state.assignments, submissions: state.submissions, attendance: state.attendance, subjects: state.subjects, users: state.users, sheetsConfig: state.sheetsConfig };
+  return { rooms: state.rooms, students: state.students, assignments: state.assignments, submissions: state.submissions, attendance: state.attendance, subjects: state.subjects, users: state.users, sheetsConfig: state.sheetsConfig, currentUser: state.currentUser };
 }
 
 async function fetchJson(url: string): Promise<any> {
