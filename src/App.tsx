@@ -531,6 +531,25 @@ export default function App() {
       ...prev,
       currentUser: nextUser,
       users: prev.users.map((u) => (u.id === nextUser.id ? nextUser : u)),
+      students:
+        nextUser.role === 'student'
+          ? prev.students.map((st) =>
+              st.id === nextUser.id
+                ? {
+                    ...st,
+                    prefix: nextUser.prefix || st.prefix,
+                    firstName: nextUser.firstName || st.firstName,
+                    lastName: nextUser.lastName || st.lastName,
+                    nickname: nextUser.nickname || st.nickname,
+                    room: nextUser.room || st.room,
+                    number: nextUser.number || st.number,
+                    phone: nextUser.phone || st.phone,
+                    email: nextUser.email || st.email,
+                    avatarUrl: nextUser.avatarUrl || st.avatarUrl,
+                  }
+                : st
+            )
+          : prev.students,
     }));
     showToast('บันทึกข้อมูลส่วนตัวเรียบร้อย');
   };
