@@ -47,7 +47,7 @@ export async function loadCloudState(): Promise<CloudState | null> {
     let result: any;
     try { result = await fetchJson(`${APPS_SCRIPT_URL}?action=getState&_=${Date.now()}`); }
     catch { result = await jsonp<any>(APPS_SCRIPT_URL); }
-    if (!result?.success || !result.exists || !result.data) return null;
+    if (!result?.success || !result.data) return null;
     return result.data as CloudState;
   } catch (error) {
     console.warn('NSW CARE cloud load failed; keeping local data.', error);
