@@ -35,7 +35,7 @@ import { LineModal } from './components/LineModal';
 import { ImageViewerModal } from './components/ImageViewerModal';
 import { SchoolMarchModal } from './components/SchoolMarchModal';
 import { playClick, playSuccess, setGlobalAudioEnabled } from './utils/audio';
-import { loadCloudState, saveCloudState, logCloudEvent } from './utils/cloudSync';
+import { loadCloudState, saveCloudState, logCloudEvent, registerCloudUser } from './utils/cloudSync';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>(() => getInitialAppState());
@@ -229,7 +229,8 @@ export default function App() {
             phone: user.phone || '0910610997',
             email: user.email,
             status: 'normal',
-            exp: 50,
+            exp: user.exp ?? 50,
+            avatarUrl: user.avatarUrl,
           });
         }
       }
@@ -243,6 +244,7 @@ export default function App() {
       };
     });
     setIsRegisterModalOpen(false);
+    void registerCloudUser(user);
     void logCloudEvent('REGISTER', user, { source: 'web' });
     showToast(`ลงทะเบียนสำเร็จ ยินดีต้อนรับ ${user.prefix || ''}${user.firstName}`);
   };
