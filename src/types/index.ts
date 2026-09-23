@@ -1,7 +1,7 @@
 export type TabType = 'home' | 'student-portal' | 'seating' | 'grading' | 'homework' | 'students' | 'tools' | 'sheets' | 'profile';
 export type UserRole = 'teacher' | 'student';
 export type ThemeColor = 'rose' | 'sakura' | 'lavender' | 'mint' | 'sky' | 'official';
-export interface User { id:string; role:UserRole; login?:string; email?:string; prefix:string; firstName:string; lastName:string; nickname?:string; room?:string; number?:number; phone?:string; bio?:string; exp?:number; avatarUrl?:string; avatarSize?:number; themeColor?:ThemeColor; }
+export interface User { id:string; role:UserRole; login?:string; email?:string; prefix:string; firstName:string; lastName:string; nickname?:string; room?:string; number?:number; phone?:string; bio?:string; exp?:number; avatarUrl?:string; avatarSize?:number; themeColor?:ThemeColor; passwordHash?:string; }
 export type StudentStatus = 'normal'|'risk'|'special_care';
 export interface Student { id:string; prefix:string; firstName:string; lastName:string; nickname:string; room:string; number:number; phone?:string; email?:string; status:StudentStatus; exp:number; avatarUrl?:string; notes?:string; }
 export type EvalType = 'score'|'pass_fail'|'check';
