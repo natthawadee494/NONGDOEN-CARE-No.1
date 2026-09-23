@@ -52,7 +52,7 @@ export const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-rose-100 border-2 border-rose-400 overflow-hidden flex items-center justify-center font-black text-rose-700 text-lg shrink-0 shadow-xs">
               {student.avatarUrl ? (
-                <img src={student.avatarUrl} alt="" className="w-full h-full object-cover" />
+                <img src={student.avatarUrl} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/assets/thai_boy_notie.jpg'; }} />
               ) : (
                 student.firstName.slice(0, 1)
               )}
