@@ -153,14 +153,19 @@ function getSavedState() {
     };
   }
 
-  const json = sheet.getRange(2, 3).getValue();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    return { success: true, exists: false, data: null };
+  }
+
+  // AppState can contain avatar data. Google Sheets cells have a size limit,
+  // so store JSON in chunks instead of one giant cell.
+  const values = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
+  const chunks = values.map(function(row) { return String(row[2] || ''); }).filter(Boolean);
+  const json = chunks.join('');
 
   if (!json) {
-    return {
-      success: true,
-      exists: false,
-      data: null,
-    };
+    return { success: true, exists: false, data: null };
   }
 
   try {
@@ -207,13 +212,26 @@ function writeStateSheet(ss, state, updatedAt) {
   ]);
 
   const json = JSON.stringify(state);
+  const chunkSize = 40000;
+  const chunks = [];
+  for (let i = 0; i < json.length; i += chunkSize) {
+    chunks.push(json.slice(i, i + chunkSize));
+  }
 
-  sheet.getRange(2, 1, 1, 3).setValues([[
-    'main',
-    updatedAt,
-    json
-  ]]);
+  const oldLastRow = sheet.getLastRow();
+  if (oldLastRow > 1) {
+    sheet.getRange(2, 1, oldLastRow - 1, 3).clearContent();
+  }
 
+  const rows = chunks.map(function(chunk, index) {
+    return [
+      index === 0 ? 'main' : '',
+      index === 0 ? updatedAt : '',
+      chunk
+    ];
+  });
+
+  sheet.getRange(2, 1, rows.length, 3).setValues(rows);
   sheet.getRange(2, 2).setNumberFormat('yyyy-mm-dd hh:mm:ss');
 }
 
