@@ -247,7 +247,7 @@ export const HomeworkTab: React.FC<HomeworkTabProps> = ({
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden border border-rose-200 shadow-2xs">
                       {std.avatarUrl ? (
-                        <img src={std.avatarUrl} alt="" className="w-full h-full object-cover" />
+                        <img src={std.avatarUrl} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/assets/thai_boy_notie.jpg'; }} />
                       ) : (
                         std.firstName.slice(0, 1)
                       )}
