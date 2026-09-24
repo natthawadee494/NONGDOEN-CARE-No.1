@@ -13,4 +13,5 @@ export type AttendanceStatus = 'มา'|'สาย'|'ลา'|'ขาด';
 export interface AttendanceRecord { id:string; date:string; studentId:string; room:string; status:AttendanceStatus; updatedAt:string; updatedBy?:string; }
 export interface Subject { id:string; name:string; groupName:string; }
 export interface GoogleSheetsConfig { sheetUrl:string; sheetName:string; lastSyncedAt?:string; autoSync:boolean; isConnected:boolean; statusMsg?:string; }
+export interface LineChat { id:string; type:'user'|'group'|'room'; name:string; pictureUrl?:string; lastSeenAt?:string; }
 export interface AppState { currentUser:User|null; currentRoom:string; activeTab:TabType; soundEnabled:boolean; rooms:string[]; students:Student[]; assignments:Assignment[]; submissions:Submission[]; attendance:AttendanceRecord[]; subjects:Subject[]; users:User[]; sheetsConfig:GoogleSheetsConfig; }
