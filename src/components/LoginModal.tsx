@@ -31,7 +31,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [activeTab, setActiveTab] = useState<'teacher' | 'student'>('teacher');
 
   // Teacher inputs
-  const [teacherEmailOrPhone, setTeacherEmailOrPhone] = useState('');
+  const [teacherEmailOrPhone, setTeacherEmailOrPhone] = useState(() => localStorage.getItem('nongdoen_remember_email') || '');
+  const [teacherPassword, setTeacherPassword] = useState('');
+  const [rememberLogin, setRememberLogin] = useState(() => localStorage.getItem('nongdoen_remember_login') === '1');
 
   // Student inputs
   const [studentRoom, setStudentRoom] = useState('ป.1');
@@ -43,19 +45,32 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const handleTeacherSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const email = teacherEmailOrPhone.trim().toLowerCase();
-    const cloudUsers = await loadCloudUsers();
-    const users = cloudUsers.length ? cloudUsers : existingUsers;
-    const user = users.find((u) =>
-      u.role === 'teacher' &&
-      (u.email || '').trim().toLowerCase() === email
-    );
-    if (!user) {
-      alert('ไม่พบอีเมลครูในระบบ กรุณาตรวจสอบอีเมลอีกครั้ง');
+    const password = teacherPassword;
+    if (!email || !password) {
+      alert('กรุณากรอกอีเมลและรหัสผ่าน');
       return;
     }
+
+    const result = await import('../utils/cloudSync').then(({ loginCloudUser }) =>
+      loginCloudUser(email, password)
+    );
+
+    if (!result.success || !result.user) {
+      alert(result.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+      return;
+    }
+
+    if (rememberLogin) {
+      localStorage.setItem('nongdoen_remember_email', email);
+      localStorage.setItem('nongdoen_remember_login', '1');
+    } else {
+      localStorage.removeItem('nongdoen_remember_email');
+      localStorage.removeItem('nongdoen_remember_login');
+    }
+
     playSuccess();
     triggerConfetti();
-    onLogin(user);
+    onLogin(result.user);
     onClose();
   };
 
@@ -143,8 +158,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               <div className="relative">
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                 <input
-                  type="text"
+                  type="email"
+                  name="username"
                   required
+                  autoComplete="username"
                   value={teacherEmailOrPhone}
                   onChange={(e) => setTeacherEmailOrPhone(e.target.value)}
                   placeholder="เช่น teacher.care@nsw.ac.th"
@@ -153,8 +170,32 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               </div>
             </div>
 
-            <div className="hidden">
+            <div className="space-y-1">
+              <label className="block font-bold text-slate-700">รหัสผ่าน: *</label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <input
+                  type="password"
+                  name="password"
+                  required
+                  autoComplete="current-password"
+                  value={teacherPassword}
+                  onChange={(e) => setTeacherPassword(e.target.value)}
+                  placeholder="รหัสผ่าน"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2.5 font-medium text-slate-800 focus:bg-white focus:border-rose-500 focus:outline-hidden"
+                />
+              </div>
             </div>
+
+            <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={rememberLogin}
+                onChange={(e) => setRememberLogin(e.target.checked)}
+                className="accent-rose-600"
+              />
+              <span>จำอีเมลสำหรับครั้งถัดไป</span>
+            </label>
 
             <div className="pt-1 flex flex-col gap-2">
               <button
