@@ -66,7 +66,7 @@ ${pendingStudents.length===0 ? '✨ ยอดเยี่ยมมาก ส่�
     if (!isOpen) return;
     const generated = templateType==='attendance' ? attendanceText : homeworkText;
     setMessage(loadLineTemplate(templateType) || generated);
-  }, [isOpen, templateType, attendanceText, homeworkText]);
+  }, [isOpen, templateType]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -75,7 +75,7 @@ ${pendingStudents.length===0 ? '✨ ยอดเยี่ยมมาก ส่�
       setChats(list);
       if (!selectedChatId && list[0]) setSelectedChatId(list[0].id);
     }).finally(() => setLoadingChats(false));
-  }, [isOpen, selectedChatId]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
