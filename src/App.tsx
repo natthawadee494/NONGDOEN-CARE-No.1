@@ -82,12 +82,28 @@ export default function App() {
       if (!alive) return;
 
       if (remote) {
+        const rememberedEmail =
+          typeof window !== 'undefined'
+            ? localStorage.getItem('nongdoen_remember_email')?.trim().toLowerCase()
+            : '';
+        const rememberedUser =
+          rememberedEmail && Array.isArray(remote.users)
+            ? remote.users.find(
+                (u) =>
+                  (u.email || '').trim().toLowerCase() === rememberedEmail
+              ) || null
+            : null;
+
         setAppState((prev) => ({
           ...prev,
           ...remote,
-          currentUser: prev.currentUser,
+          currentUser: prev.currentUser || rememberedUser,
           activeTab: prev.activeTab,
-          currentRoom: prev.currentRoom || remote.currentRoom || 'ป.1',
+          currentRoom:
+            prev.currentRoom ||
+            rememberedUser?.room ||
+            remote.currentRoom ||
+            'ป.1',
         }));
       }
 
@@ -258,6 +274,8 @@ export default function App() {
   const handleLogout = () => {
     playClick();
     const user = appState.currentUser;
+    localStorage.removeItem('nongdoen_remember_email');
+    localStorage.removeItem('nongdoen_remember_login');
     setAppState((prev) => ({
       ...prev,
       currentUser: null,
