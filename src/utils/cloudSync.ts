@@ -154,7 +154,8 @@ export async function loginCloudUser(email: string, password: string): Promise<{
 export async function loadLineChats(): Promise<import('../types').LineChat[]> {
   if (typeof window === 'undefined') return [];
   try {
-    const result = await fetchJson(`${APPS_SCRIPT_URL}?action=getLineChats&_=${Date.now()}`);
+    const response = await fetch('/api/line-chats', { cache: 'no-store' });
+    const result = await response.json();
     return Array.isArray(result?.data) ? result.data : [];
   } catch {
     return [];
@@ -164,13 +165,10 @@ export async function loadLineChats(): Promise<import('../types').LineChat[]> {
 export async function sendLineMessage(chatId: string, message: string): Promise<boolean> {
   if (typeof window === 'undefined' || !chatId || !message.trim()) return false;
   try {
-    const response = await fetch(APPS_SCRIPT_URL, {
+    const response = await fetch('/api/line-send', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-      body: new URLSearchParams({
-        action: 'sendLineMessage',
-        payload: JSON.stringify({ chatId, message: message.trim() }),
-      }).toString(),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chatId, message: message.trim() }),
     });
     const result = await response.json();
     return result?.success === true;
