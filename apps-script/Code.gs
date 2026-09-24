@@ -1165,3 +1165,27 @@ function readLineChats() {
     }))
     .sort((a,b) => String(b.lastSeenAt || '').localeCompare(String(a.lastSeenAt || '')));
 }
+
+
+/*************************************************
+ * ADMIN: SET PASSWORD FOR AN EXISTING ACCOUNT
+ * Run manually once from Apps Script editor.
+ *************************************************/
+function setPasswordForEmail(email, password) {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  if (!normalizedEmail || !password) throw new Error('email and password are required');
+
+  const ss = getSpreadsheet();
+  const sheet = getOrCreateSheet(ss, 'Users', SCHEMAS.Users);
+  if (sheet.getLastRow() < 2) throw new Error('Users sheet is empty');
+
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, SCHEMAS.Users.length).getValues();
+  for (let i = 0; i < values.length; i++) {
+    if (String(values[i][3] || '').trim().toLowerCase() === normalizedEmail) {
+      sheet.getRange(i + 2, 17).setValue(hashPassword_(password));
+      SpreadsheetApp.flush();
+      return 'Password updated for ' + normalizedEmail;
+    }
+  }
+  throw new Error('User email not found: ' + normalizedEmail);
+}
