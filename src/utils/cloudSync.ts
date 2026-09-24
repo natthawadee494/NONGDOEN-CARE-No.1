@@ -130,3 +130,65 @@ export async function registerCloudUser(user: User): Promise<void> {
     console.warn('NSW CARE account save failed.', error);
   }
 }
+
+
+export async function loginCloudUser(email: string, password: string): Promise<{success:boolean; user?:User; message?:string}> {
+  if (typeof window === 'undefined') return { success:false, message:'Browser only' };
+  try {
+    const response = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: new URLSearchParams({
+        action: 'loginUser',
+        payload: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      }).toString(),
+    });
+    const result = await response.json();
+    if (result?.success && result.user) return { success:true, user: result.user as User };
+    return { success:false, message: result?.message || 'เข้าสู่ระบบไม่สำเร็จ' };
+  } catch {
+    return { success:false, message:'เชื่อมต่อระบบบัญชีไม่ได้ กรุณาลองใหม่อีกครั้ง' };
+  }
+}
+
+export async function loadLineChats(): Promise<import('../types').LineChat[]> {
+  if (typeof window === 'undefined') return [];
+  try {
+    const result = await fetchJson(`${APPS_SCRIPT_URL}?action=getLineChats&_=${Date.now()}`);
+    return Array.isArray(result?.data) ? result.data : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function sendLineMessage(chatId: string, message: string): Promise<boolean> {
+  if (typeof window === 'undefined' || !chatId || !message.trim()) return false;
+  try {
+    const response = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: new URLSearchParams({
+        action: 'sendLineMessage',
+        payload: JSON.stringify({ chatId, message: message.trim() }),
+      }).toString(),
+    });
+    const result = await response.json();
+    return result?.success === true;
+  } catch {
+    return false;
+  }
+}
+
+export async function saveLineTemplate(templateType: string, message: string): Promise<void> {
+  try {
+    localStorage.setItem(`nongdoen_line_template_${templateType}`, message);
+  } catch {}
+}
+
+export function loadLineTemplate(templateType: string): string | null {
+  try {
+    return localStorage.getItem(`nongdoen_line_template_${templateType}`);
+  } catch {
+    return null;
+  }
+}
