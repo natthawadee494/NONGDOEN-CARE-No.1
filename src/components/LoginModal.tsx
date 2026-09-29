@@ -141,7 +141,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
           </div>
         )}
 
-        <div className="border-t border-slate-100 pt-3 text-center">
+        <div className="border-t border-slate-100 pt-3 text-center" data-login-footer="true">
           <p className="text-xs text-slate-500">ยังไม่มีบัญชี?{' '}
             <button onClick={() => { onClose(); onOpenRegister(activeTab); }} className="text-rose-600 font-bold hover:underline inline-flex items-center gap-1">
               ลงทะเบียนก่อนเข้าสู่ระบบ <ArrowRight className="w-3 h-3" />
