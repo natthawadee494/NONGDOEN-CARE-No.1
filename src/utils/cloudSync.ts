@@ -1,7 +1,7 @@
 import { AppState, Assignment, AttendanceRecord, Student, Subject, Submission, User, GoogleSheetsConfig } from '../types';
 
 export const DEFAULT_APPS_SCRIPT_URL =
-  'https://script.google.com/macros/s/AKfycbwOP-KdwUtGg-dsKiTBpffg9IV_Gs5Ic-fV3YNX62bZf7ABiMTcEd9Vmru-ya40SisD/exec';
+  'https://script.google.com/macros/s/AKfycbyhpew090eYTWZWMuu0TaR8fqn73hSN_MnoCw6HhoprC2cEvKH2EAUHAcbZko9teH6z/exec';
 
 export const APPS_SCRIPT_URL =
   (import.meta.env.VITE_APPS_SCRIPT_URL as string | undefined)?.trim() ||
