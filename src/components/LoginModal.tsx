@@ -3,6 +3,7 @@ import { LogIn, Mail, Lock, ArrowRight } from 'lucide-react';
 import { User } from '../types';
 import { playClick, playSuccess } from '../utils/audio';
 import { loginCloudUser, setInitialCloudPassword } from '../utils/cloudSync';
+import { saveCurrentUser } from '../utils/storage';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -20,7 +21,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
   const [setupPasswordMode, setSetupPasswordMode] = useState(false);
   const [setupPassword, setSetupPassword] = useState('');
   const [setupPasswordConfirm, setSetupPasswordConfirm] = useState('');
-  const [submitting, setSubmitting] = useState(false);\n  const [rememberLogin, setRememberLogin] = useState(() => localStorage.getItem('nongdoen_remember_login') === '1');
+  const [submitting, setSubmitting] = useState(false);
+  const [rememberLogin, setRememberLogin] = useState(() => localStorage.getItem('nongdoen_remember_login') === '1');
 
   React.useEffect(() => {
     if (isOpen) setActiveTab(rolePreset);
@@ -36,6 +38,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
       return;
     }
 
+    setSubmitting(true);
+    try {
     const result = await loginCloudUser(normalizedEmail, password);
     if (!result.success || !result.user) {
       if ((result.message || '').includes('ยังไม่ได้ตั้งรหัสผ่าน')) {
@@ -62,11 +66,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
     }
 
     playSuccess();
+    if (rememberLogin) saveCurrentUser(result.user);
+    else saveCurrentUser(null);
     await onLogin(result.user);
     onClose();
-  } finally {
-    setSubmitting(false);
-  }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -107,7 +113,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
 
           <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
             <input type="checkbox" checked={rememberLogin} onChange={e => setRememberLogin(e.target.checked)} className="accent-rose-600" />
-            จำอีเมลสำหรับครั้งถัดไป
+            จำการเข้าสู่ระบบในเครื่องนี้
           </label>
 
           {!setupPasswordMode ? (
@@ -129,7 +135,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
               <button type="button" onClick={async () => {
                 if (setupPassword.length < 6) return alert('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
                 if (setupPassword !== setupPasswordConfirm) return alert('รหัสผ่านทั้งสองช่องไม่ตรงกัน');
-                const saved = await setInitialCloudPassword(normalizedEmail, setupPassword);
+                const saved = await setInitialCloudPassword(email.trim().toLowerCase(), setupPassword);
                 if (!saved.success) return alert(saved.message || 'ตั้งรหัสผ่านไม่สำเร็จ');
                 alert('ตั้งรหัสผ่านสำเร็จ กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่');
                 setPassword('');
