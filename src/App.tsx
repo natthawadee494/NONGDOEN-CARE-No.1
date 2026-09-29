@@ -321,6 +321,19 @@ export default function App() {
     showToast(`สั่งการบ้าน "${asg.title}" สำเร็จ`);
   };
 
+  // Delete Assignment
+  const handleDeleteAssignment = (assignmentId: string) => {
+    const target = appState.assignments.find((a) => a.id === assignmentId);
+    if (!target) return;
+    if (!window.confirm(`ลบการบ้าน "${target.title}" ใช่หรือไม่? ข้อมูลการส่งงานและคะแนนของงานนี้จะถูกลบด้วย`)) return;
+    setAppState((prev) => ({
+      ...prev,
+      assignments: prev.assignments.filter((a) => a.id !== assignmentId),
+      submissions: prev.submissions.filter((s) => s.assignmentId !== assignmentId),
+    }));
+    showToast('ลบการบ้านและข้อมูลการส่งงานเรียบร้อยแล้ว');
+  };
+
   // Grade Submission
   const handleGradeSubmission = (
     assignmentId: string,
@@ -682,6 +695,7 @@ export default function App() {
               submissions={appState.submissions}
               subjects={appState.subjects}
               onAddAssignment={handleAddAssignment}
+              onDeleteAssignment={handleDeleteAssignment}
               onGradeSubmission={handleGradeSubmission}
               onViewImage={handleViewImage}
               onOpenSheetsModal={() => handleTabChange('sheets')}
