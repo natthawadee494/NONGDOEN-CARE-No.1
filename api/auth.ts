@@ -1,4 +1,4 @@
-const APPS_SCRIPT_URL = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbyjRXtsUKZprrFkCM9Z0R0Iffw137qzKL8R0Z0R0Iffw137qzKL8y10Pz19SaeoQ1dwKwVwtVW8dFNu5yhp3Y/exec';
+const APPS_SCRIPT_URL = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbyjRXtsUKZprrFkCM9Z0R0Iffw137qzKL8y10Pz19SaeoQ1dwKwVwtVW8dFNu5yhp3Y/exec';
 
 async function callAppsScript(action:string, payload:any) {
   const response = await fetch(APPS_SCRIPT_URL, {
