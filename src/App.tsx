@@ -156,8 +156,7 @@ export default function App() {
       appState.currentUser?.role === 'student' &&
       appState.activeTab !== 'home' &&
       appState.activeTab !== 'student-portal' &&
-      appState.activeTab !== 'profile' &&
-      appState.activeTab !== 'exp-manager'
+      appState.activeTab !== 'profile'
     ) {
       setAppState((prev) => ({ ...prev, activeTab: 'home' }));
     }
