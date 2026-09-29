@@ -11,8 +11,6 @@ import {
 import {
   getInitialAppState,
   saveAppState,
-  DEMO_TEACHER,
-  DEMO_STUDENT,
   getDefaultInitialState,
 } from './utils/storage';
 import { TopBar } from './components/TopBar';
@@ -165,50 +163,6 @@ export default function App() {
     showToast(`เปลี่ยนเป็นชั้น ${room} แล้ว`);
   };
 
-  // Quick Demo Teacher
-  const handleQuickDemoTeacher = () => {
-    playSuccess();
-    setAppState((prev) => ({
-      ...prev,
-      currentUser: DEMO_TEACHER,
-      activeTab: 'home',
-    }));
-    showToast('เข้าสู่ระบบในฐานะ ครูแคร์ (ทดลองใช้)');
-  };
-
-  // Quick Demo Student
-  const handleQuickDemoStudent = () => {
-    playSuccess();
-    setAppState((prev) => ({
-      ...prev,
-      currentUser: DEMO_STUDENT,
-      currentRoom: DEMO_STUDENT.room || 'ป.1',
-      activeTab: 'student-portal',
-    }));
-    showToast('เข้าสู่ระบบในฐานะ น้องเดิ่น (ทดลองใช้)');
-  };
-
-  // Switch role quick toggle
-  const handleSwitchRole = (role: 'teacher' | 'student') => {
-    playSuccess();
-    if (role === 'teacher') {
-      setAppState((prev) => ({
-        ...prev,
-        currentUser: DEMO_TEACHER,
-        activeTab: 'home',
-      }));
-      showToast('สลับเข้าสู่ระบบ: ครูแคร์');
-    } else {
-      setAppState((prev) => ({
-        ...prev,
-        currentUser: DEMO_STUDENT,
-        currentRoom: DEMO_STUDENT.room || 'ป.1',
-        activeTab: 'student-portal',
-      }));
-      showToast('สลับเข้าสู่ระบบ: น้องเดิ่น');
-    }
-  };
-
   // Login handler
   const handleLogin = (user: User) => {
     setAppState((prev) => {
@@ -231,43 +185,41 @@ export default function App() {
     showToast(`ยินดีต้อนรับ ${user.prefix || ''}${user.firstName}`);
   };
 
-  // Register handler
-  const handleRegister = (user: User) => {
+  // Register handler: create the account only. Do not sign the user in automatically.
+  const handleRegister = async (user: User, _password: string) => {
+    const duplicate = appState.users.some(
+      (u) => (u.email || '').trim().toLowerCase() === (user.email || '').trim().toLowerCase()
+    );
+    if (duplicate) {
+      showToast('อีเมลนี้มีบัญชีอยู่แล้ว กรุณาเข้าสู่ระบบ');
+      return false;
+    }
+
     setAppState((prev) => {
       const nextUsers = [...prev.users, user];
       let nextStudents = [...prev.students];
-      if (user.role === 'student') {
-        const studentExists = nextStudents.some((s) => s.id === user.id);
-        if (!studentExists) {
-          nextStudents.push({
-            id: user.id,
-            prefix: user.prefix || 'เด็กชาย',
-            firstName: user.firstName,
-            lastName: user.lastName,
-            nickname: user.nickname || user.firstName,
-            room: user.room || 'ป.1',
-            number: user.number || 1,
-            phone: user.phone || '0910610997',
-            email: user.email,
-            status: 'normal',
-            exp: user.exp ?? 50,
-            avatarUrl: user.avatarUrl,
-          });
-        }
+      if (user.role === 'student' && !nextStudents.some((s) => s.id === user.id)) {
+        nextStudents.push({
+          id: user.id,
+          prefix: user.prefix || 'เด็กชาย',
+          firstName: user.firstName,
+          lastName: user.lastName,
+          nickname: user.nickname || user.firstName,
+          room: user.room || 'ป.1',
+          number: user.number || 1,
+          phone: user.phone || '',
+          email: user.email,
+          status: 'normal',
+          exp: user.exp ?? 50,
+          avatarUrl: user.avatarUrl,
+        });
       }
-      return {
-        ...prev,
-        currentUser: user,
-        currentRoom: user.role === 'student' && user.room ? user.room : prev.currentRoom,
-        users: nextUsers,
-        students: nextStudents,
-        activeTab: user.role === 'student' ? 'student-portal' : 'home',
-      };
+      return { ...prev, users: nextUsers, students: nextStudents, currentUser: null };
     });
-    setIsRegisterModalOpen(false);
+
     void registerCloudUser(user);
     void logCloudEvent('REGISTER', user, { source: 'web' });
-    showToast(`ลงทะเบียนสำเร็จ ยินดีต้อนรับ ${user.prefix || ''}${user.firstName}`);
+    return true;
   };
 
   // Logout handler
@@ -607,11 +559,14 @@ export default function App() {
     return (
       <>
         <LandingPage
-          onLogin={handleLogin}
-          onRegister={handleRegister}
-          onQuickDemoTeacher={handleQuickDemoTeacher}
-          onQuickDemoStudent={handleQuickDemoStudent}
-          existingStudents={appState.students}
+          onLogin={(role) => {
+            setRegisterRole(role);
+            setIsLoginModalOpen(true);
+          }}
+          onRegister={(role) => {
+            setRegisterRole(role);
+            setIsRegisterModalOpen(true);
+          }}
         />
 
         {toastMessage && (
@@ -787,6 +742,7 @@ export default function App() {
         onLogin={handleLogin}
         onOpenRegister={handleOpenRegister}
         existingUsers={appState.users}
+        rolePreset={registerRole}
       />
 
       <RegisterModal
