@@ -35,7 +35,6 @@ interface NavigationProps {
   currentUser: User | null;
   onLogout: () => void;
   onOpenMarchModal: () => void;
-  onSwitchRole: (role: 'teacher' | 'student') => void;
   sheetsConfig?: GoogleSheetsConfig;
   onOpenLogin?: () => void;
   isMobileOpen: boolean;
@@ -50,7 +49,6 @@ export const Sidebar: React.FC<NavigationProps> = ({
   currentUser,
   onLogout,
   onOpenMarchModal,
-  onSwitchRole,
   sheetsConfig,
   onOpenLogin,
   isMobileOpen,
@@ -416,38 +414,8 @@ export const Sidebar: React.FC<NavigationProps> = ({
           </div>
         </div>
 
-        {/* Bottom Switcher Card */}
-        <div className="p-3 border-t border-slate-100 bg-slate-50/70 space-y-2">
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => {
-                playClick();
-                onSwitchRole('teacher');
-              }}
-              className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                isTeacher
-                  ? 'bg-slate-900 text-white shadow-2xs'
-                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
-              }`}
-            >
-              <span>ครูแคร์</span>
-            </button>
-
-            <button
-              onClick={() => {
-                playClick();
-                onSwitchRole('student');
-              }}
-              className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                isStudent
-                  ? 'bg-slate-900 text-white shadow-2xs'
-                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
-              }`}
-            >
-              <span>เด็กชายน้องเดิ่น</span>
-            </button>
-          </div>
-
+        {/* Bottom account actions */}
+        <div className="p-3 border-t border-slate-100 bg-slate-50/70">
           <button
             onClick={() => {
               playClick();
