@@ -31,6 +31,7 @@ import { LoginModal } from './components/LoginModal';
 import { RegisterModal } from './components/RegisterModal';
 import { StudentDetailModal } from './components/StudentDetailModal';
 import { LineModal } from './components/LineModal';
+import { ProfileTab } from './components/ProfileTab';
 import { ImageViewerModal } from './components/ImageViewerModal';
 import { SchoolMarchModal } from './components/SchoolMarchModal';
 import { playClick, playSuccess, setGlobalAudioEnabled } from './utils/audio';
@@ -153,7 +154,8 @@ export default function App() {
     if (
       appState.currentUser?.role === 'student' &&
       appState.activeTab !== 'home' &&
-      appState.activeTab !== 'student-portal'
+      appState.activeTab !== 'student-portal' &&
+      appState.activeTab !== 'profile'
     ) {
       setAppState((prev) => ({ ...prev, activeTab: 'home' }));
     }
@@ -570,7 +572,10 @@ export default function App() {
     showToast(`ซิงค์ข้อมูลการบ้านแล้ว ${fetched.length} รายการ`);
   };
 
-  // Profile editing is intentionally disabled.
+  const handleUpdateUser = (updated: User) => {
+    setAppState((prev) => ({ ...prev, currentUser: updated, users: prev.users.map((u) => u.id === updated.id ? updated : u) }));
+    saveCurrentUser(updated);
+  };
 
   // Reset default data
   const handleResetDefaultData = () => {
@@ -678,6 +683,10 @@ export default function App() {
               onOpenMarchModal={() => setIsMarchModalOpen(true)}
               onOpenSheetsModal={() => handleTabChange('sheets')}
             />
+          )}
+
+          {appState.activeTab === 'profile' && (
+            <ProfileTab currentUser={appState.currentUser} onUpdateUser={handleUpdateUser} />
           )}
 
           {appState.activeTab === 'student-portal' && (
