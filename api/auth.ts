@@ -37,6 +37,11 @@ export default async function handler(req:any,res:any) {
       if(!user || !user.email || !password) return res.status(400).json({success:false,message:'ข้อมูลลงทะเบียนไม่ครบ'});
       return res.status(200).json(await callAppsScript('registerUser',{...user,password:String(password)}));
     }
+    if(action==='setInitialPassword'){
+      if(!email || !password) return res.status(400).json({success:false,message:'กรุณากรอกอีเมลและรหัสผ่าน'});
+      if(String(password).length < 6) return res.status(400).json({success:false,message:'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'});
+      return res.status(200).json(await callAppsScript('setInitialPassword',{email:String(email).trim().toLowerCase(),password:String(password)}));
+    }
     return res.status(400).json({success:false,message:'Unknown auth action'});
   } catch(error:any) {
     return res.status(502).json({success:false,message:error?.message || 'เชื่อมต่อระบบบัญชีไม่ได้'});
