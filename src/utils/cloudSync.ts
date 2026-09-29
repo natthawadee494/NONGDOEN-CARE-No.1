@@ -132,6 +132,29 @@ export async function registerCloudUser(user: User): Promise<void> {
 }
 
 
+export async function registerCloudAccount(user: User, password: string): Promise<{success:boolean; message?:string}> {
+  if (typeof window === 'undefined') return { success:false, message:'Browser only' };
+  try {
+    const bytes = new TextEncoder().encode(String(password || ''));
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    const passwordHash = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+    const account = { ...user, passwordHash };
+    const response = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: new URLSearchParams({
+        action: 'registerUser',
+        payload: JSON.stringify(account),
+      }).toString(),
+    });
+    const result = await response.json();
+    if (result?.success) return { success:true };
+    return { success:false, message: result?.message || 'ลงทะเบียนไม่สำเร็จ' };
+  } catch {
+    return { success:false, message:'เชื่อมต่อระบบบัญชีไม่ได้ กรุณาลองใหม่อีกครั้ง' };
+  }
+}
+
 export async function loginCloudUser(email: string, password: string): Promise<{success:boolean; user?:User; message?:string}> {
   if (typeof window === 'undefined') return { success:false, message:'Browser only' };
   try {
