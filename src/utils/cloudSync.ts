@@ -47,14 +47,19 @@ function sanitizeCloudState(data: CloudState): CloudState {
 
 export async function loadCloudState(): Promise<CloudState | null> {
   if (typeof window === 'undefined') return null;
-  try {
-    const result = await fetchJson('/api/cloud-state?action=getState');
-    if (!result?.data) return null;
-    return sanitizeCloudState(result.data as CloudState);
-  } catch (error) {
-    console.warn('NSW CARE cloud load failed; keeping local data.', error);
-    return null;
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const result = await fetchJson('/api/cloud-state?action=getState');
+      if (!result?.data) throw new Error('ไม่พบข้อมูลจากฐานข้อมูล');
+      return sanitizeCloudState(result.data as CloudState);
+    } catch (error) {
+      lastError = error;
+      await new Promise((resolve) => setTimeout(resolve, attempt * 700));
+    }
   }
+  console.warn('NSW CARE cloud load failed after retries; keeping local data.', lastError);
+  return null;
 }
 
 let saveInFlight = false;
