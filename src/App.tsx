@@ -12,6 +12,8 @@ import {
   getInitialAppState,
   saveAppState,
   getDefaultInitialState,
+  loadCurrentUser,
+  saveCurrentUser,
 } from './utils/storage';
 import { TopBar } from './components/TopBar';
 import { Sidebar } from './components/Sidebar';
@@ -33,7 +35,7 @@ import { LineModal } from './components/LineModal';
 import { ImageViewerModal } from './components/ImageViewerModal';
 import { SchoolMarchModal } from './components/SchoolMarchModal';
 import { playClick, playSuccess, setGlobalAudioEnabled } from './utils/audio';
-import { loadCloudState, saveCloudState, logCloudEvent } from './utils/cloudSync';
+import { loadCloudState, loadCloudUsers, saveCloudState, logCloudEvent } from './utils/cloudSync';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>(() => getInitialAppState());
@@ -79,14 +81,40 @@ export default function App() {
 
       if (!alive) return;
 
+      const rememberedUser = loadCurrentUser();
+      let restoredUser: User | null = null;
+
+      if (rememberedUser) {
+        const remoteUsers = remote?.users?.length ? remote.users : await loadCloudUsers();
+        restoredUser =
+          remoteUsers.find(
+            (u) =>
+              u.id === rememberedUser.id ||
+              String(u.email || '').trim().toLowerCase() ===
+                String(rememberedUser.email || '').trim().toLowerCase(),
+          ) || null;
+      }
+
       if (remote) {
         setAppState((prev) => ({
           ...prev,
           ...remote,
-          // Authentication is never restored automatically.
-          currentUser: null,
+          currentUser: restoredUser,
+          activeTab: restoredUser ? 'home' : 'home',
+          currentRoom:
+            restoredUser?.role === 'student' && restoredUser.room
+              ? restoredUser.room
+              : remote.currentRoom || prev.currentRoom || 'ป.1',
+        }));
+      } else if (restoredUser) {
+        setAppState((prev) => ({
+          ...prev,
+          currentUser: restoredUser,
+          currentRoom:
+            restoredUser?.role === 'student' && restoredUser.room
+              ? restoredUser.room
+              : prev.currentRoom,
           activeTab: 'home',
-          currentRoom: remote.currentRoom || 'ป.1',
         }));
       }
 
@@ -237,6 +265,7 @@ export default function App() {
     const user = appState.currentUser;
     localStorage.removeItem('nongdoen_remember_email');
     localStorage.removeItem('nongdoen_remember_login');
+    saveCurrentUser(null);
     setAppState((prev) => ({
       ...prev,
       currentUser: null,
