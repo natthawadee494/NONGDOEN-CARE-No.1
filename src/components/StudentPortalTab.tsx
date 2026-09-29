@@ -79,7 +79,7 @@ export const StudentPortalTab: React.FC<StudentPortalTabProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const compressed = await compressImageDataUrl(file, 1200, 42000);
+      const compressed = await compressImageDataUrl(file, 1200, 45000);
       setUploadImagePreview(compressed);
     } catch (error) {
       console.error(error);
@@ -486,6 +486,7 @@ export const StudentPortalTab: React.FC<StudentPortalTabProps> = ({
                   <input
                     type="file"
                     accept="image/*"
+                    capture="environment"
                     onChange={handleFileChange}
                     className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                   />
