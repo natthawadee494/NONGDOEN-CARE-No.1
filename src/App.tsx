@@ -173,11 +173,11 @@ export default function App() {
 
   // Login handler
   const handleLogin = async (user: User) => {
-    // Persist the session immediately so a refresh does not force a new login.
+    // Do not block the login screen on Google Apps Script. Restore the session first,
+    // then merge cloud data in the background.
     saveCurrentUser(user);
-    const remote = await loadCloudState();
     setAppState((prev) => {
-      const base = remote ? { ...prev, ...remote } : prev;
+      const base = prev;
       const nextUsers = base.users.some((u) => u.id === user.id)
         ? base.users.map((u) => (u.id === user.id ? user : u))
         : [...base.users, user];
@@ -215,6 +215,18 @@ export default function App() {
     setIsLoginModalOpen(false);
     void logCloudEvent('LOGIN', user, { source: 'web' });
     showToast(`ยินดีต้อนรับ ${user.prefix || ''}${user.firstName}`);
+
+    // Cloud reconciliation happens after the UI is usable, preventing slow/failed
+    // Apps Script requests from making login appear stuck.
+    void loadCloudState().then((remote) => {
+      if (!remote) return;
+      setAppState((prev) => ({
+        ...prev,
+        ...remote,
+        currentUser: user,
+        currentRoom: user.role === 'student' && user.room ? user.room : prev.currentRoom,
+      }));
+    });
   };
 
   // Register handler: the server/API is the source of truth for account creation.
@@ -419,7 +431,7 @@ export default function App() {
         id: `sub-${Date.now()}-${studentId}`,
         assignmentId,
         studentId,
-        fileUrl,
+        imageUrl: fileUrl,
         note: note || 'กรณีส่งแล้ว',
         submittedAt: new Date().toISOString(),
         status: 'submitted' as const,
@@ -458,7 +470,7 @@ export default function App() {
         id: `sub-${Date.now()}-${studentId}`,
         assignmentId,
         studentId,
-        fileUrl,
+        imageUrl: fileUrl,
         note: note || 'กรณีส่งแล้ว',
         submittedAt: new Date().toISOString(),
         status: 'submitted' as const,
