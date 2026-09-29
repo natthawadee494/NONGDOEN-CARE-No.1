@@ -9,7 +9,6 @@ import {
   LogIn,
   LogOut,
   ExternalLink,
-  User as UserIcon,
   Youtube,
 } from 'lucide-react';
 import { User } from '../types';
@@ -18,7 +17,6 @@ import { isMuted, toggleMuted, playClick, playSuccess } from '../utils/audio';
 interface TopBarProps {
   currentUser: User | null;
   onOpenMarchModal: () => void;
-  onOpenProfile: () => void;
   onOpenLogin: () => void;
   onLogout: () => void;
 }
@@ -26,7 +24,6 @@ interface TopBarProps {
 export const TopBar: React.FC<TopBarProps> = ({
   currentUser,
   onOpenMarchModal,
-  onOpenProfile,
   onOpenLogin,
   onLogout,
 }) => {
@@ -138,32 +135,19 @@ export const TopBar: React.FC<TopBarProps> = ({
           {/* User Profile / Quick Switcher / Logout */}
           {currentUser ? (
             <div className="flex items-center gap-1.5 pl-2 border-l border-slate-700">
-              <button
-                onClick={() => {
-                  playClick();
-                  onOpenProfile();
-                }}
-                className="flex items-center gap-1.5 hover:opacity-80 transition-opacity text-left cursor-pointer"
-                title="คลิกเพื่อดูบัญชีส่วนตัว"
-              >
+              <div className="flex items-center gap-1.5">
                 <div className="w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden">
-                  {currentUser.avatarUrl ? (
-                    <img src={currentUser.avatarUrl} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/assets/thai_boy_notie.jpg'; }} />
-                  ) : (
-                    <span>{currentUser.firstName.slice(0, 1)}</span>
-                  )}
+                  <span>{currentUser.firstName.slice(0, 1)}</span>
                 </div>
                 <div className="hidden sm:flex flex-col">
                   <span className="font-semibold text-white leading-tight">
                     {currentUser.prefix} {currentUser.firstName}
                   </span>
                   <span className="text-[10px] text-rose-300 leading-none">
-                    {currentUser.role === 'teacher'
-                      ? 'ครูประจำชั้น'
-                      : `นักเรียน (${currentUser.room || ''})`}
+                    {currentUser.role === 'teacher' ? 'ครูประจำชั้น' : `นักเรียน (${currentUser.room || ''})`}
                   </span>
                 </div>
-              </button>
+              </div>
 
               <button
                 onClick={() => {
