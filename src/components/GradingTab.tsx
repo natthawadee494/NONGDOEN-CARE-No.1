@@ -177,6 +177,7 @@ export const GradingTab: React.FC<GradingTabProps> = ({
           <div className="flex items-center gap-2 flex-1">
             <span className="text-xs font-bold text-slate-700 shrink-0">เลือกการบ้าน:</span>
             {roomAssignments.length > 0 ? (
+              <>
               <select
                 value={currentAssignment?.id || ''}
                 onChange={(e) => {
@@ -200,6 +201,7 @@ export const GradingTab: React.FC<GradingTabProps> = ({
                   ลบการบ้าน
                 </button>
               )}
+              </>
             ) : (
               <span className="text-xs text-slate-400">ยังไม่มีการบ้านในห้องนี้</span>
             )}
