@@ -1,4 +1,4 @@
-export type TabType = 'home' | 'student-portal' | 'seating' | 'grading' | 'homework' | 'students' | 'tools' | 'sheets' | 'profile';
+export type TabType = 'home' | 'student-portal' | 'seating' | 'grading' | 'homework' | 'students' | 'tools' | 'sheets' | 'profile' | 'exp-manager';
 export type UserRole = 'teacher' | 'student';
 export type ThemeColor = 'rose' | 'sakura' | 'lavender' | 'mint' | 'sky' | 'official';
 export interface User { id:string; role:UserRole; login?:string; email?:string; prefix:string; firstName:string; lastName:string; nickname?:string; room?:string; number?:number; phone?:string; bio?:string; exp?:number; avatarUrl?:string; avatarSize?:number; themeColor?:ThemeColor; passwordHash?:string; }
