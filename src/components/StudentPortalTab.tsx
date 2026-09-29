@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Assignment, Submission, User, Student } from '../types';
 import { playClick, playSuccess, triggerConfetti } from '../utils/audio';
+import { compressImageDataUrl } from '../utils/image';
 
 interface StudentPortalTabProps {
   currentUser: User | null;
@@ -69,14 +70,15 @@ export const StudentPortalTab: React.FC<StudentPortalTabProps> = ({
     return submissions.find((s) => s.assignmentId === asgId && s.studentId === activeStudent.id);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setUploadImagePreview(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    try {
+      const compressed = await compressImageDataUrl(file, 1200, 42000);
+      setUploadImagePreview(compressed);
+    } catch (error) {
+      console.error(error);
+      alert('ไม่สามารถประมวลผลรูปการบ้านได้');
     }
   };
 
