@@ -554,6 +554,26 @@ export default function App() {
           }}
         />
 
+        <LoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          onLogin={handleLogin}
+          onOpenRegister={handleOpenRegister}
+          existingUsers={appState.users}
+          rolePreset={registerRole}
+        />
+
+        <RegisterModal
+          isOpen={isRegisterModalOpen}
+          role={registerRole}
+          onClose={() => setIsRegisterModalOpen(false)}
+          onRegister={handleRegister}
+          onOpenLogin={() => {
+            setIsRegisterModalOpen(false);
+            setIsLoginModalOpen(true);
+          }}
+        />
+
         {toastMessage && (
           <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-xl border border-slate-700 flex items-center gap-2 animate-bounce">
             <span className="w-2 h-2 rounded-full bg-rose-500"></span>
