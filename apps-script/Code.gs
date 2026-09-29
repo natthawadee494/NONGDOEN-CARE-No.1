@@ -529,6 +529,7 @@ function registerUser(user) {
     const sheet=getOrCreateSheet(ss,'Users',SCHEMAS.Users);
     const email=String(user.email || '').trim().toLowerCase();
     if(!email) throw new Error('Email is required');
+    if(existingIndex>=0 && String(values[existingIndex][3] || '').trim().toLowerCase()===email && user.id && String(values[existingIndex][0] || '')!==String(user.id) && user.password) throw new Error('อีเมลนี้มีบัญชีอยู่แล้ว');
     const lastRow=sheet.getLastRow();
     const values=lastRow>=2 ? sheet.getRange(2,1,lastRow-1,SCHEMAS.Users.length).getValues() : [];
     let existingIndex=-1, existingPasswordHash='';
@@ -540,7 +541,6 @@ function registerUser(user) {
       }
     }
     const passwordHash=user.passwordHash || (user.password ? hashPassword_(user.password) : '') || existingPasswordHash;
-    if(!passwordHash) throw new Error('Password is required');
     const row=[
       user.id || (existingIndex>=0 ? values[existingIndex][0] : 'usr-'+Date.now()),
       user.role || 'student', user.login || email, email,
