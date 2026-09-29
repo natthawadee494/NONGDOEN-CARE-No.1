@@ -18,6 +18,7 @@ import {
   GraduationCap,
   LogOut,
   Youtube,
+  UserRound,
 } from 'lucide-react';
 import { User, GoogleSheetsConfig } from '../types';
 import { Mascot } from './Mascot';
@@ -172,7 +173,7 @@ export const Sidebar: React.FC<NavigationProps> = ({
           </button>
 
           <button onClick={() => handleNavClick('profile')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-left ${activeTab === 'profile' ? 'bg-rose-600 text-white' : 'text-slate-700 hover:bg-slate-100'}`}>
-            <User className="w-4 h-4" /><span>บัญชีส่วนตัว</span>{activeTab === 'profile' && <ChevronRight className="w-4 h-4 ml-auto" />}
+            <UserRound className="w-4 h-4" /><span>บัญชีส่วนตัว</span>{activeTab === 'profile' && <ChevronRight className="w-4 h-4 ml-auto" />}
           </button>
 
           {isStudent && (
