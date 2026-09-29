@@ -19,6 +19,7 @@ import {
   LogOut,
   Youtube,
   UserRound,
+  Award,
 } from 'lucide-react';
 import { User, GoogleSheetsConfig } from '../types';
 import { Mascot } from './Mascot';
@@ -184,6 +185,10 @@ export const Sidebar: React.FC<NavigationProps> = ({
 
           {isTeacher && (
             <>
+              <button onClick={() => handleNavClick('exp-manager')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-left ${activeTab === 'exp-manager' ? 'bg-amber-500 text-white' : 'text-slate-700 hover:bg-amber-50'}`}>
+                <Award className="w-4 h-4" /><span>ให้คะแนน EXP นักเรียน</span>{activeTab === 'exp-manager' && <ChevronRight className="w-4 h-4 ml-auto" />}
+              </button>
+
               <button onClick={() => handleNavClick('seating')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-left ${activeTab === 'seating' ? 'bg-rose-600 text-white' : 'text-slate-700 hover:bg-slate-100'}`}>
                 <CheckSquare className="w-4 h-4" /><span>ผังที่นั่ง & เช็กชื่อ ({currentRoom})</span>
               </button>
