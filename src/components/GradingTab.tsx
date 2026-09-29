@@ -53,6 +53,7 @@ export const GradingTab: React.FC<GradingTabProps> = ({
   const [selectedAsgId, setSelectedAsgId] = useState<string>(roomAssignments[0]?.id || '');
   const [isCreatingModal, setIsCreatingModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [detailSubmission, setDetailSubmission] = useState<{ submission: Submission; student: Student } | null>(null);
 
   // New assignment form state
   const [newTitle, setNewTitle] = useState('');
@@ -328,15 +329,15 @@ export const GradingTab: React.FC<GradingTabProps> = ({
 
                       {/* Attached Work Photo */}
                       <td className="py-3 px-4 text-center">
-                        {sub?.imageUrl ? (
+                        {sub ? (
                           <button
-                            onClick={() => onViewImage(sub.imageUrl!, `ใบงานของ ${std.firstName}`)}
+                            onClick={() => setDetailSubmission({ submission: sub, student: std })}
                             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-pink-100 hover:bg-pink-200 text-pink-700 text-xs font-bold border border-pink-200 transition-colors cursor-pointer"
                           >
                             <Eye className="w-3 h-3" />
-                            <span>ดูภาพงาน</span>
+                            <span>ดูรายละเอียดงาน</span>
                           </button>
-                        ) : sub?.note ? (
+                        ) : (
                           <span
                             className="text-[11px] text-slate-600 italic max-w-[120px] truncate block"
                             title={sub.note}
@@ -397,6 +398,51 @@ export const GradingTab: React.FC<GradingTabProps> = ({
           </table>
         </div>
       </div>
+
+      {/* Submission Detail Modal */}
+      {detailSubmission && (
+        <div className="fixed inset-0 z-[60] bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+              <div>
+                <div className="text-[11px] font-black text-pink-600">รายละเอียดการส่งงาน</div>
+                <h3 className="text-lg font-black text-slate-800 mt-1">
+                  {detailSubmission.student.prefix} {detailSubmission.student.firstName} {detailSubmission.student.lastName}
+                </h3>
+                <p className="text-xs text-slate-500">เลขที่ {detailSubmission.student.number} • {currentAssignment?.title}</p>
+              </div>
+              <button onClick={() => setDetailSubmission(null)} className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 font-black text-slate-500">✕</button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3"><div className="text-[10px] text-slate-500">สถานะ</div><div className="font-black text-emerald-700 mt-1">{detailSubmission.submission.status === 'graded' ? 'ตรวจแล้ว' : 'ส่งแล้ว'}</div></div>
+                <div className="rounded-xl bg-slate-50 border border-slate-200 p-3"><div className="text-[10px] text-slate-500">เวลาส่ง</div><div className="font-bold text-slate-700 mt-1 text-[11px]">{new Date(detailSubmission.submission.submittedAt).toLocaleString('th-TH')}</div></div>
+                <div className="rounded-xl bg-pink-50 border border-pink-200 p-3"><div className="text-[10px] text-slate-500">คะแนน</div><div className="font-black text-pink-700 mt-1">{detailSubmission.submission.score ?? '-'} / {currentAssignment?.maxScore ?? '-'}</div></div>
+                <div className="rounded-xl bg-amber-50 border border-amber-200 p-3"><div className="text-[10px] text-slate-500">ห้อง</div><div className="font-black text-slate-700 mt-1">{detailSubmission.student.room || '-'}</div></div>
+              </div>
+              {detailSubmission.submission.imageUrl ? (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <div className="text-xs font-black text-slate-700 mb-2">ภาพงานที่นักเรียนส่ง</div>
+                  <img src={detailSubmission.submission.imageUrl} alt="งานที่ส่ง" className="w-full max-h-[55vh] object-contain rounded-xl bg-white" />
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-300 p-5 text-center text-sm text-slate-400">นักเรียนไม่ได้แนบภาพ</div>
+              )}
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                <div className="text-xs font-black text-slate-700 mb-2">ข้อความจากนักเรียน</div>
+                <p className="text-sm text-slate-700 whitespace-pre-wrap">{detailSubmission.submission.note || 'ไม่มีข้อความแนบ'}</p>
+              </div>
+              <div className="rounded-2xl bg-pink-50 border border-pink-200 p-4">
+                <div className="text-xs font-black text-pink-700 mb-2">ความคิดเห็นจากครู</div>
+                <p className="text-sm text-slate-700 whitespace-pre-wrap">{detailSubmission.submission.feedback || 'ยังไม่มีความคิดเห็นจากครู'}</p>
+              </div>
+              {detailSubmission.submission.fileUrl && !detailSubmission.submission.imageUrl && (
+                <a href={detailSubmission.submission.fileUrl} target="_blank" rel="noreferrer" className="block text-center px-4 py-3 rounded-xl bg-slate-900 text-white text-xs font-black">เปิดไฟล์งาน</a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* New Assignment Modal */}
       {isCreatingModal && (
