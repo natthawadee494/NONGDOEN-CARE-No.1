@@ -406,9 +406,8 @@ export function loadAppState(): AppState {
         if (parsed.soundEnabled === undefined) {
           parsed.soundEnabled = true;
         }
-        if (parsed.currentUser === undefined) {
-          parsed.currentUser = DEMO_TEACHER;
-        }
+        // Never persist an authenticated session locally.
+        parsed.currentUser = null;
         return parsed as AppState;
       }
     }
@@ -425,7 +424,8 @@ export const getInitialAppState = loadAppState;
 export function saveAppState(state: AppState): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(state));
+    // Keep application data locally, but never persist the authenticated user.
+    localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify({ ...state, currentUser: null }));
   } catch (err) {
     console.error('Failed to save state to localStorage:', err);
   }
@@ -442,8 +442,7 @@ export function loadCurrentUser(): User | null {
   } catch (err) {
     console.error('Failed to load user from localStorage:', err);
   }
-  // Default to Demo Teacher
-  return DEMO_TEACHER;
+  return null;
 }
 
 export function saveCurrentUser(user: User | null): void {
