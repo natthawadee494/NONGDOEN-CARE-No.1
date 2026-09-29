@@ -2,7 +2,7 @@ const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwOP-Kd
 
 function getAppsScriptUrl() {
   const value = String(process.env.APPS_SCRIPT_URL || DEFAULT_APPS_SCRIPT_URL).trim();
-  if (!/^https?:\\/\\//i.test(value)) throw new Error('APPS_SCRIPT_URL is invalid');
+  if (!/^https?:\/\//i.test(value)) throw new Error('APPS_SCRIPT_URL is invalid');
   return value;
 }
 
