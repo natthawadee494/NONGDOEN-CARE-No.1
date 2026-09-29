@@ -1,10 +1,10 @@
 const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwOP-KdwUtGg-dsKiTBpffg9IV_Gs5Ic-fV3YNX62bZf7ABiMTcEd9Vmru-ya40SisD/exec';
 function getAppsScriptUrl() {
   let value = String(process.env.APPS_SCRIPT_URL || DEFAULT_APPS_SCRIPT_URL).trim();
-  value = value.replace(/^\\[|\\]$/g, '');
-  const markdown = value.match(/^\\[[^\\]]*\\]\\((https?:\\/\\/[^)]+)\\)$/);
+  value = value.replace(/^\[|\]$/g, '');
+  const markdown = value.match(/^\[[^\]]*\]\((https?:\/\/[^)]+)\)$/);
   if (markdown) value = markdown[1];
-  if (!/^https?:\\/\\//i.test(value)) throw new Error('APPS_SCRIPT_URL ไม่ใช่ URL ที่ถูกต้อง');
+  if (!/^https?:\/\//i.test(value)) throw new Error('APPS_SCRIPT_URL ไม่ใช่ URL ที่ถูกต้อง');
   return value;
 }
 
