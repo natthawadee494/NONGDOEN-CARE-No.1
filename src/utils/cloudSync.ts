@@ -59,6 +59,7 @@ export async function loadCloudState(): Promise<CloudState | null> {
 
 let saveInFlight = false;
 let queuedState: AppState | null = null;
+let retryTimer: number | null = null;
 
 async function flushCloudSave(): Promise<void> {
   if (saveInFlight || !queuedState) return;
@@ -73,8 +74,14 @@ async function flushCloudSave(): Promise<void> {
       keepalive: true,
     });
   } catch (error) {
-    console.warn('NSW CARE cloud save failed; retrying latest state.', error);
+    console.warn('NSW CARE cloud save failed; keeping the latest state queued.', error);
     queuedState = state;
+    if (typeof window !== 'undefined' && retryTimer === null) {
+      retryTimer = window.setTimeout(() => {
+        retryTimer = null;
+        void flushCloudSave();
+      }, 3000);
+    }
   } finally {
     saveInFlight = false;
     if (queuedState) void flushCloudSave();
@@ -220,4 +227,12 @@ export function loadLineTemplate(templateType: string): string | null {
   } catch {
     return null;
   }
+}
+
+
+// Try one last cloud write when the browser is being hidden/refreshed.
+if (typeof window !== 'undefined') {
+  const flushOnHide = () => { void flushCloudSave(); };
+  window.addEventListener('pagehide', flushOnHide);
+  window.addEventListener('beforeunload', flushOnHide);
 }
