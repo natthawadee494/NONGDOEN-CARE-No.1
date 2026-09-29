@@ -57,8 +57,14 @@ export async function loadCloudState(): Promise<CloudState | null> {
   }
 }
 
-export async function saveCloudState(state: AppState): Promise<void> {
-  if (typeof window === 'undefined') return;
+let saveInFlight = false;
+let queuedState: AppState | null = null;
+
+async function flushCloudSave(): Promise<void> {
+  if (saveInFlight || !queuedState) return;
+  saveInFlight = true;
+  const state = queuedState;
+  queuedState = null;
   try {
     await fetchJson('/api/cloud-state', {
       method: 'POST',
@@ -67,8 +73,18 @@ export async function saveCloudState(state: AppState): Promise<void> {
       keepalive: true,
     });
   } catch (error) {
-    console.warn('NSW CARE cloud save failed; localStorage remains available.', error);
+    console.warn('NSW CARE cloud save failed; retrying latest state.', error);
+    queuedState = state;
+  } finally {
+    saveInFlight = false;
+    if (queuedState) void flushCloudSave();
   }
+}
+
+export async function saveCloudState(state: AppState): Promise<void> {
+  if (typeof window === 'undefined') return;
+  queuedState = state;
+  await flushCloudSave();
 }
 
 export async function logCloudEvent(action: string, user: User | null, details: Record<string, unknown> = {}): Promise<void> {
