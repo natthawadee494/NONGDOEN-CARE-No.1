@@ -90,76 +90,112 @@ export const Sidebar: React.FC<NavigationProps> = ({
 
         <div className="flex items-center gap-2">
           {currentUser ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold">
+              <span>{currentUser.nickname || currentUser.firstName}</span>
+            </div>
+          ) : (
             <button
-              <button
-                onClick={() => handleNavClick('seating')}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
-                  activeTab === 'seating'
-                    ? 'bg-rose-600 text-white shadow-xs'
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-              >
-                <CheckSquare className="w-4 h-4 shrink-0" />
-                <span>ผังที่นั่ง & เช็กชื่อ ({currentRoom})</span>
-                {activeTab === 'seating' && <ChevronRight className="w-4 h-4 ml-auto" />}
-              </button>
+              onClick={onOpenLogin}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 text-white rounded-xl text-xs font-bold cursor-pointer"
+            >
+              <span>เข้าสู่ระบบ</span>
+            </button>
+          )}
+        </div>
+      </div>
 
-              <button
-                onClick={() => handleNavClick('grading')}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
-                  activeTab === 'grading'
-                    ? 'bg-rose-600 text-white shadow-xs'
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-              >
-                <BookOpen className="w-4 h-4 shrink-0" />
-                <span>ตรวจงาน & สมุดคะแนน</span>
-                {activeTab === 'grading' && <ChevronRight className="w-4 h-4 ml-auto" />}
-              </button>
+      {/* 2. Mobile Backdrop */}
+      {isMobileOpen && (
+        <div
+          onClick={() => setIsMobileOpen(false)}
+          className="lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs transition-opacity"
+        />
+      )}
 
-              <button
-                onClick={() => handleNavClick('homework')}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
-                  activeTab === 'homework'
-                    ? 'bg-rose-600 text-white shadow-xs'
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-              >
-                <ClipboardList className="w-4 h-4 shrink-0" />
-                <span>ติดตามการบ้าน & ใบงาน</span>
-                {activeTab === 'homework' && <ChevronRight className="w-4 h-4 ml-auto" />}
-              </button>
+      {/* 3. Aside Drawer Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 flex flex-col justify-between shadow-lg lg:shadow-xs transition-transform duration-300 ease-in-out lg:translate-x-0 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        <div>
+          <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
+            <button
+              onClick={() => handleNavClick('home')}
+              className="flex items-center gap-2.5 text-left group cursor-pointer"
+            >
+              <Mascot size="md" variant="mascot" className="group-hover:scale-105 transition-transform" />
+              <div className="flex flex-col">
+                <div className="inline-flex items-center px-2 py-0.5 rounded-lg bg-white border-2 border-pink-400 shadow-2xs">
+                  <span className="font-black text-xs text-slate-700 tracking-tight">
+                    NONGDOEN <span className="text-pink-600">CARE</span>
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-500 font-semibold leading-tight line-clamp-1 mt-1">
+                  รร.หนองเดิ่นศรีเจริญวิทยา
+                </span>
+                <span className="text-[9px] text-rose-600 font-bold uppercase tracking-wider">สพป.หนองคาย เขต 1</span>
+              </div>
+            </button>
+            <button onClick={() => setIsMobileOpen(false)} className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 cursor-pointer">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
-              <button
-                onClick={() => handleNavClick('students')}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
-                  activeTab === 'students'
-                    ? 'bg-rose-600 text-white shadow-xs'
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-              >
-                <Users className="w-4 h-4 shrink-0" />
-                <span>ทะเบียนนักเรียน (เพิ่ม/ลบ)</span>
-                {activeTab === 'students' && <ChevronRight className="w-4 h-4 ml-auto" />}
-              </button>
+          <div className="px-4 py-3 bg-gradient-to-r from-rose-50/60 to-pink-50/40 border-b border-rose-100/70">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-slate-900 border-2 border-white shadow-sm flex items-center justify-center text-white font-bold text-sm overflow-hidden">
+                {currentUser?.avatarUrl ? <img src={currentUser.avatarUrl} alt="" className="w-full h-full object-cover" /> : <span>{currentUser?.nickname?.slice(0,1) || currentUser?.firstName?.slice(0,1) || 'N'}</span>}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-black text-xs text-slate-900 truncate">{currentUser?.prefix} {currentUser?.firstName}</div>
+                <div className="text-[10px] text-slate-500 font-medium mt-0.5">
+                  {currentUser?.role === 'teacher' ? 'ครูประจำชั้น' : `นักเรียนชั้น ${currentUser?.room || ''}`}
+                </div>
+              </div>
+            </div>
+            <div className="mt-2.5 pt-2 border-t border-rose-200/50 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-1 text-slate-600 font-bold"><Layers className="w-3.5 h-3.5 text-rose-600" /><span>{isStudent ? 'ระดับชั้นที่เรียน:' : 'เปลี่ยนห้อง:'}</span></div>
+              {isStudent ? (
+                <span className="px-2.5 py-0.5 rounded-lg bg-pink-100 text-pink-700 font-black text-xs">{currentUser?.room || currentRoom}</span>
+              ) : (
+                <select value={currentRoom} onChange={(e) => onChangeRoom(e.target.value)} className="bg-transparent text-xs font-black text-rose-700 focus:outline-hidden cursor-pointer">
+                  {ROOMS_LIST.map((room) => <option key={room} value={room}>{room.startsWith('อ.') ? `อนุบาล ${room.slice(2)} (${room})` : `ประถม ${room.slice(2)} (${room})`}</option>)}
+                </select>
+              )}
+            </div>
+          </div>
+        </div>
 
-              <button
-                onClick={() => handleNavClick('tools')}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
-                  activeTab === 'tools'
-                    ? 'bg-rose-600 text-white shadow-xs'
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-              >
-                <Wrench className="w-4 h-4 shrink-0" />
-                <span>เครื่องมือครู (นาฬิกา/สุ่ม)</span>
-                {activeTab === 'tools' && <ChevronRight className="w-4 h-4 ml-auto" />}
-              </button>
+        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+          <div className="px-3 pb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">แถบเมนูหลัก (Navigation)</div>
+          <button onClick={() => handleNavClick('home')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-left ${activeTab === 'home' ? 'bg-rose-600 text-white' : 'text-slate-700 hover:bg-slate-100'}`}>
+            <Home className="w-4 h-4" /><span>หน้าแรก & สารสนเทศ</span>{activeTab === 'home' && <ChevronRight className="w-4 h-4 ml-auto" />}
+          </button>
 
-              <button
-              </>
+          {isStudent && (
+            <button onClick={() => handleNavClick('student-portal')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-left ${activeTab === 'student-portal' ? 'bg-rose-600 text-white' : 'text-slate-700 hover:bg-slate-100'}`}>
+              <GraduationCap className="w-4 h-4" /><span>การบ้าน & ภาระงานของฉัน</span>{activeTab === 'student-portal' && <ChevronRight className="w-4 h-4 ml-auto" />}
+            </button>
           )}
 
+          {isTeacher && (
+            <>
+              <button onClick={() => handleNavClick('seating')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-left ${activeTab === 'seating' ? 'bg-rose-600 text-white' : 'text-slate-700 hover:bg-slate-100'}`}>
+                <CheckSquare className="w-4 h-4" /><span>ผังที่นั่ง & เช็กชื่อ ({currentRoom})</span>
+              </button>
+              <button onClick={() => handleNavClick('grading')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-left ${activeTab === 'grading' ? 'bg-rose-600 text-white' : 'text-slate-700 hover:bg-slate-100'}`}>
+                <BookOpen className="w-4 h-4" /><span>ตรวจงาน & สมุดคะแนน</span>
+              </button>
+              <button onClick={() => handleNavClick('homework')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-left ${activeTab === 'homework' ? 'bg-rose-600 text-white' : 'text-slate-700 hover:bg-slate-100'}`}>
+                <ClipboardList className="w-4 h-4" /><span>ติดตามการบ้าน & ใบงาน</span>
+              </button>
+              <button onClick={() => handleNavClick('students')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-left ${activeTab === 'students' ? 'bg-rose-600 text-white' : 'text-slate-700 hover:bg-slate-100'}`}>
+                <Users className="w-4 h-4" /><span>ทะเบียนนักเรียน (เพิ่ม/ลบ)</span>
+              </button>
+              <button onClick={() => handleNavClick('tools')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-left ${activeTab === 'tools' ? 'bg-rose-600 text-white' : 'text-slate-700 hover:bg-slate-100'}`}>
+                <Wrench className="w-4 h-4" /><span>เครื่องมือครู (นาฬิกา/สุ่ม)</span>
+              </button>
+            </>
+          )}
           {/* External Links Section */}
           <div className="pt-4 pb-1">
             <div className="px-3 pb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">
