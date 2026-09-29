@@ -69,6 +69,21 @@ export function loadAppState(): AppState {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && Array.isArray(parsed.students)) {
+        const sampleStudentIds = new Set(['std-p1-doen','std-p1-02','std-p1-03','std-p1-04','std-p1-05','std-p1-06','std-p1-07','std-p1-08','std-p1-09','std-p1-10','std-p2-01','std-p2-02','std-k1-01']);
+        const sampleAssignmentIds = new Set(['asg-01','asg-02','asg-03','asg-04','asg-05']);
+        parsed.students = parsed.students.filter((s: Student) => !sampleStudentIds.has(String(s.id)));
+        parsed.assignments = Array.isArray(parsed.assignments)
+          ? parsed.assignments.filter((a: Assignment) => !sampleAssignmentIds.has(String(a.id)))
+          : [];
+        parsed.submissions = Array.isArray(parsed.submissions)
+          ? parsed.submissions.filter((s: Submission) => !sampleAssignmentIds.has(String(s.assignmentId)) && !sampleStudentIds.has(String(s.studentId)))
+          : [];
+        parsed.attendance = Array.isArray(parsed.attendance)
+          ? parsed.attendance.filter((a: AttendanceRecord) => !sampleStudentIds.has(String(a.studentId)))
+          : [];
+        parsed.users = Array.isArray(parsed.users)
+          ? parsed.users.filter((u: User) => !['usr-teacher-care','std-p1-doen'].includes(String(u.id)))
+          : [];
         if (parsed.students.length === 0) {
           parsed.students = INITIAL_STUDENTS;
         }
