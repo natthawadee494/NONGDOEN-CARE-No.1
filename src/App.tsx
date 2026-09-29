@@ -33,7 +33,7 @@ import { LineModal } from './components/LineModal';
 import { ImageViewerModal } from './components/ImageViewerModal';
 import { SchoolMarchModal } from './components/SchoolMarchModal';
 import { playClick, playSuccess, setGlobalAudioEnabled } from './utils/audio';
-import { loadCloudState, saveCloudState, logCloudEvent, registerCloudUser } from './utils/cloudSync';
+import { loadCloudState, saveCloudState, logCloudEvent } from './utils/cloudSync';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>(() => getInitialAppState());
@@ -162,7 +162,6 @@ export default function App() {
         activeTab: user.role === 'student' ? 'student-portal' : 'home',
       };
       void saveCloudState(nextState);
-      void registerCloudUser(user);
       return nextState;
     });
     setIsLoginModalOpen(false);
@@ -202,7 +201,6 @@ export default function App() {
       return { ...prev, users: nextUsers, students: nextStudents, currentUser: null };
     });
 
-    void registerCloudUser(user);
     void logCloudEvent('REGISTER', user, { source: 'web' });
     return true;
   };
