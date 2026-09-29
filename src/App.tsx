@@ -156,11 +156,32 @@ export default function App() {
       const nextUsers = base.users.some((u) => u.id === user.id)
         ? base.users.map((u) => (u.id === user.id ? user : u))
         : [...base.users, user];
+      let nextStudents = [...base.students];
+      if (user.role === 'student') {
+        const studentFromAccount: Student = {
+          id: user.id,
+          prefix: user.prefix || 'เด็กชาย',
+          firstName: user.firstName || '',
+          lastName: user.lastName || '',
+          nickname: user.nickname || user.firstName || '',
+          room: user.room || 'ป.1',
+          number: user.number || 1,
+          phone: user.phone || '',
+          email: user.email || user.login || '',
+          status: 'normal',
+          exp: user.exp ?? 50,
+          avatarUrl: user.avatarUrl,
+        };
+        const index = nextStudents.findIndex((s) => s.id === user.id);
+        if (index >= 0) nextStudents[index] = { ...nextStudents[index], ...studentFromAccount };
+        else nextStudents.push(studentFromAccount);
+      }
       const nextState = {
         ...base,
         currentUser: user,
         currentRoom: user.role === 'student' && user.room ? user.room : prev.currentRoom,
         users: nextUsers,
+        students: nextStudents,
         activeTab: 'home',
       };
       return nextState;
