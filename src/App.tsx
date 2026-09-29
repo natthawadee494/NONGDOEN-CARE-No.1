@@ -149,19 +149,20 @@ export default function App() {
   };
 
   // Login handler
-  const handleLogin = (user: User) => {
+  const handleLogin = async (user: User) => {
+    const remote = await loadCloudState();
     setAppState((prev) => {
-      const nextUsers = prev.users.some((u) => u.id === user.id)
-        ? prev.users.map((u) => (u.id === user.id ? user : u))
-        : [...prev.users, user];
+      const base = remote ? { ...prev, ...remote } : prev;
+      const nextUsers = base.users.some((u) => u.id === user.id)
+        ? base.users.map((u) => (u.id === user.id ? user : u))
+        : [...base.users, user];
       const nextState = {
-        ...prev,
+        ...base,
         currentUser: user,
         currentRoom: user.role === 'student' && user.room ? user.room : prev.currentRoom,
         users: nextUsers,
         activeTab: user.role === 'student' ? 'student-portal' : 'home',
       };
-      void saveCloudState(nextState);
       return nextState;
     });
     setIsLoginModalOpen(false);
@@ -169,18 +170,14 @@ export default function App() {
     showToast(`ยินดีต้อนรับ ${user.prefix || ''}${user.firstName}`);
   };
 
-  // Register handler: create the account only. Do not sign the user in automatically.
+  // Register handler: the server/API is the source of truth for account creation.
   const handleRegister = async (user: User, _password: string) => {
-    const duplicate = appState.users.some(
-      (u) => (u.email || '').trim().toLowerCase() === (user.email || '').trim().toLowerCase()
-    );
-    if (duplicate) {
-      showToast('อีเมลนี้มีบัญชีอยู่แล้ว กรุณาเข้าสู่ระบบ');
-      return false;
-    }
-
     setAppState((prev) => {
-      const nextUsers = [...prev.users, user];
+      const email = (user.email || '').trim().toLowerCase();
+      const nextUsers = [
+        ...prev.users.filter((u) => (u.email || '').trim().toLowerCase() !== email && u.id !== user.id),
+        user,
+      ];
       let nextStudents = [...prev.students];
       if (user.role === 'student' && !nextStudents.some((s) => s.id === user.id)) {
         nextStudents.push({
