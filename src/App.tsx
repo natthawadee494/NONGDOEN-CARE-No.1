@@ -80,28 +80,13 @@ export default function App() {
       if (!alive) return;
 
       if (remote) {
-        const rememberedEmail =
-          typeof window !== 'undefined'
-            ? localStorage.getItem('nongdoen_remember_email')?.trim().toLowerCase()
-            : '';
-        const rememberedUser =
-          rememberedEmail && Array.isArray(remote.users)
-            ? remote.users.find(
-                (u) =>
-                  (u.email || '').trim().toLowerCase() === rememberedEmail
-              ) || null
-            : null;
-
         setAppState((prev) => ({
           ...prev,
           ...remote,
-          currentUser: prev.currentUser || rememberedUser,
-          activeTab: prev.activeTab,
-          currentRoom:
-            prev.currentRoom ||
-            rememberedUser?.room ||
-            remote.currentRoom ||
-            'ป.1',
+          // Authentication is never restored automatically.
+          currentUser: null,
+          activeTab: 'home',
+          currentRoom: remote.currentRoom || 'ป.1',
         }));
       }
 
