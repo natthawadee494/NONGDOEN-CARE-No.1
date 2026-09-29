@@ -1,4 +1,4 @@
-const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwOP-KdwUtGg-dsKiTBpffg9IV_Gs5Ic-fV3YNX62bZf7ABiMTcEd9Vmru-ya40SisD/exec';
+const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhpew090eYTWZWMuu0TaR8fqn73hSN_MnoCw6HhoprC2cEvKH2EAUHAcbZko9teH6z/exec';
 
 function getAppsScriptUrl() {
   const value = String(process.env.APPS_SCRIPT_URL || DEFAULT_APPS_SCRIPT_URL).trim();
