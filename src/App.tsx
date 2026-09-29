@@ -172,6 +172,7 @@ export default function App() {
 
   // Register handler: the server/API is the source of truth for account creation.
   const handleRegister = async (user: User, _password: string) => {
+    let nextState: AppState | null = null;
     setAppState((prev) => {
       const email = (user.email || '').trim().toLowerCase();
       const nextUsers = [
@@ -179,8 +180,8 @@ export default function App() {
         user,
       ];
       let nextStudents = [...prev.students];
-      if (user.role === 'student' && !nextStudents.some((s) => s.id === user.id)) {
-        nextStudents.push({
+      if (user.role === 'student') {
+        const studentRecord: Student = {
           id: user.id,
           prefix: user.prefix || 'เด็กชาย',
           firstName: user.firstName,
@@ -193,11 +194,18 @@ export default function App() {
           status: 'normal',
           exp: user.exp ?? 50,
           avatarUrl: user.avatarUrl,
-        });
+        };
+        const existingIndex = nextStudents.findIndex((s) => s.id === user.id);
+        if (existingIndex >= 0) nextStudents[existingIndex] = { ...nextStudents[existingIndex], ...studentRecord };
+        else nextStudents.push(studentRecord);
       }
-      return { ...prev, users: nextUsers, students: nextStudents, currentUser: null };
+      nextState = { ...prev, users: nextUsers, students: nextStudents, currentUser: null };
+      return nextState;
     });
 
+    if (nextState) {
+      await saveCloudState(nextState);
+    }
     void logCloudEvent('REGISTER', user, { source: 'web' });
     return true;
   };
@@ -433,7 +441,7 @@ export default function App() {
   const handleAddStudent = (std: Student) => {
     setAppState((prev) => ({
       ...prev,
-      students: [...prev.students, std],
+      students: [...prev.students.filter((s) => s.id !== std.id), std],
     }));
     showToast(`เพิ่ม ${std.prefix}${std.firstName} เรียบร้อยแล้ว`);
   };
@@ -442,7 +450,7 @@ export default function App() {
   const handleUpdateStudent = (std: Student) => {
     setAppState((prev) => ({
       ...prev,
-      students: prev.students.map((s) => (s.id === std.id ? std : s)),
+      students: prev.students.map((s) => (s.id === std.id ? { ...s, ...std } : s)),
     }));
     showToast('บันทึกการแก้ไขข้อมูลนักเรียนแล้ว');
   };
