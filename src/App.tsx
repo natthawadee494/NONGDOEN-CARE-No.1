@@ -27,7 +27,6 @@ import { HomeworkTab } from './components/HomeworkTab';
 import { StudentsTab } from './components/StudentsTab';
 import { TeacherToolsTab } from './components/TeacherToolsTab';
 import { GoogleSheetsTab } from './components/GoogleSheetsTab';
-import { ProfileTab } from './components/ProfileTab';
 import { LoginModal } from './components/LoginModal';
 import { RegisterModal } from './components/RegisterModal';
 import { StudentDetailModal } from './components/StudentDetailModal';
@@ -95,9 +94,15 @@ export default function App() {
         setAppState((prev) => {
           const remembered = loadCurrentUser();
           const restoredUser = remembered || prev.currentUser;
-          const remoteUsers = remote.users || [];
+          const mergeById = <T extends { id: string }>(localItems: T[] = [], remoteItems: T[] = []) => {
+            const map = new Map<string, T>();
+            localItems.forEach((item) => map.set(String(item.id), item));
+            remoteItems.forEach((item) => map.set(String(item.id), item));
+            return Array.from(map.values());
+          };
+          const users = mergeById(prev.users || [], remote.users || []);
           const matchedUser = restoredUser
-            ? remoteUsers.find(
+            ? users.find(
                 (u) => u.id === restoredUser.id ||
                   String(u.email || '').trim().toLowerCase() === String(restoredUser.email || '').trim().toLowerCase(),
               ) || restoredUser
@@ -106,15 +111,20 @@ export default function App() {
           return {
             ...prev,
             ...remote,
+            students: mergeById(prev.students || [], remote.students || []),
+            assignments: mergeById(prev.assignments || [], remote.assignments || []),
+            submissions: mergeById(prev.submissions || [], remote.submissions || []),
+            attendance: mergeById(prev.attendance || [], remote.attendance || []),
+            subjects: mergeById(prev.subjects || [], remote.subjects || []),
+            users,
             currentUser: matchedUser,
-            activeTab: matchedUser ? prev.activeTab || 'home' : 'home',
+            activeTab: matchedUser ? (prev.activeTab || 'home') : 'home',
             currentRoom: matchedUser?.role === 'student' && matchedUser.room
               ? matchedUser.room
-              : prev.currentRoom || 'ป.1',
+              : (prev.currentRoom || 'ป.1'),
           };
         });
       }
-
       setCloudReady(true);
     })();
 
@@ -561,44 +571,7 @@ export default function App() {
     showToast(`ซิงค์ข้อมูลการบ้านแล้ว ${fetched.length} รายการ`);
   };
 
-  // Profile update
-  const handleUpdateUser = (updated: Partial<User>) => {
-    if (!appState.currentUser) return;
-    const nextUser = { ...appState.currentUser, ...updated };
-    setAppState((prev) => {
-      const nextUsers = prev.users.some((u) => u.id === nextUser.id)
-        ? prev.users.map((u) => (u.id === nextUser.id ? nextUser : u))
-        : [...prev.users, nextUser];
-      const nextState = {
-      ...prev,
-      currentUser: nextUser,
-      users: nextUsers,
-      students:
-        nextUser.role === 'student'
-          ? prev.students.map((st) =>
-              st.id === nextUser.id
-                ? {
-                    ...st,
-                    prefix: nextUser.prefix || st.prefix,
-                    firstName: nextUser.firstName || st.firstName,
-                    lastName: nextUser.lastName || st.lastName,
-                    nickname: nextUser.nickname || st.nickname,
-                    room: nextUser.room || st.room,
-                    number: nextUser.number || st.number,
-                    phone: nextUser.phone || st.phone,
-                    email: nextUser.email || st.email,
-                    avatarUrl: nextUser.avatarUrl || st.avatarUrl,
-                  }
-                : st
-            )
-          : prev.students,
-      };
-      void saveCloudState(nextState);
-      void registerCloudUser(nextUser);
-      return nextState;
-    });
-    showToast('บันทึกข้อมูลส่วนตัวเรียบร้อย');
-  };
+  // Profile editing is intentionally disabled.
 
   // Reset default data
   const handleResetDefaultData = () => {
@@ -684,7 +657,6 @@ export default function App() {
         <TopBar
           currentUser={appState.currentUser}
           onOpenMarchModal={() => setIsMarchModalOpen(true)}
-          onOpenProfile={() => handleTabChange('profile')}
           onOpenLogin={() => setIsLoginModalOpen(true)}
           onLogout={handleLogout}
         />
@@ -792,19 +764,7 @@ export default function App() {
             />
           )}
 
-          {appState.activeTab === 'profile' && (
-            <ProfileTab
-              currentUser={appState.currentUser}
-              appState={appState}
-              onUpdateUser={handleUpdateUser}
-              onImportBackup={handleImportBackup}
-              onResetDefaultData={handleResetDefaultData}
-              assignments={appState.assignments}
-              sheetsConfig={appState.sheetsConfig}
-              onUpdateSheetsConfig={handleUpdateSheetsConfig}
-              onSyncAssignments={handleSyncAssignments}
-            />
-          )}
+
         </main>
 
         {/* Official School Footer */}
