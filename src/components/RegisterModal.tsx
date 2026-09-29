@@ -37,8 +37,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, role, onCl
     e.preventDefault();
     const normalizedEmail = email.trim().toLowerCase();
 
-    if (!firstName.trim() || !lastName.trim() || !normalizedEmail || password.length < 4) {
-      alert('กรุณากรอกข้อมูลให้ครบ และตั้งรหัสผ่านอย่างน้อย 4 ตัวอักษร');
+    if (!firstName.trim() || !lastName.trim() || !normalizedEmail || password.length < 6) {
+      alert('กรุณากรอกข้อมูลให้ครบ และตั้งรหัสผ่านอย่างน้อย 6 ตัวอักษร');
       return;
     }
     if (password !== confirmPassword) {
@@ -114,7 +114,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, role, onCl
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><label className="block font-bold text-slate-700 mb-1"><Lock className="w-3.5 h-3.5 inline mr-1" />รหัสผ่าน *</label><input type="password" minLength={4} required autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5" /></div>
+            <div><label className="block font-bold text-slate-700 mb-1"><Lock className="w-3.5 h-3.5 inline mr-1" />รหัสผ่าน *</label><input type="password" minLength={6} required autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5" /></div>
             <div><label className="block font-bold text-slate-700 mb-1">ยืนยันรหัสผ่าน *</label><input type="password" minLength={4} required autoComplete="new-password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5" /></div>
           </div>
 
