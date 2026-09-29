@@ -64,7 +64,12 @@ export const StudentPortalTab: React.FC<StudentPortalTabProps> = ({
     };
 
   const studentRoom = activeStudent.room || currentUser?.room || 'ป.1';
-  const myAssignments = assignments.filter((a) => a.room === studentRoom || a.room === 'ทุกห้อง');
+  const myAssignments = assignments
+    .filter((a) => {
+      const room = String(a.room || '').trim();
+      return !room || room === studentRoom || room === 'ทุกห้อง' || room === 'ทุกห้องเรียน';
+    })
+    .sort((a, b) => String(b.dueDate || '').localeCompare(String(a.dueDate || '')));
 
   const getSubmission = (asgId: string): Submission | undefined => {
     return submissions.find((s) => s.assignmentId === asgId && s.studentId === activeStudent.id);
