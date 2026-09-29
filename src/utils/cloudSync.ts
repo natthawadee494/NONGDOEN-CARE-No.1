@@ -93,6 +93,45 @@ export async function logCloudEvent(action: string, user: User | null, details: 
   } catch {}
 }
 
+export async function loginCloudUser(email: string, password: string): Promise<{ success: boolean; message?: string; user?: User }> {
+  if (typeof window === 'undefined') return { success: false, message: 'ระบบล็อกอินใช้ได้บนหน้าเว็บเท่านั้น' };
+  try {
+    const result = await fetchJson('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', email: email.trim().toLowerCase(), password }),
+    });
+    return {
+      success: result?.success !== false && !!result?.user,
+      message: result?.message,
+      user: result?.user as User | undefined,
+    };
+  } catch (error: any) {
+    return { success: false, message: error?.message || 'เข้าสู่ระบบไม่สำเร็จ' };
+  }
+}
+
+export async function registerCloudAccount(
+  user: User,
+  password: string,
+): Promise<{ success: boolean; message?: string; user?: User }> {
+  if (typeof window === 'undefined') return { success: false, message: 'ระบบลงทะเบียนใช้ได้บนหน้าเว็บเท่านั้น' };
+  try {
+    const result = await fetchJson('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'register', user, password }),
+    });
+    return {
+      success: result?.success !== false,
+      message: result?.message,
+      user: (result?.user || user) as User,
+    };
+  } catch (error: any) {
+    return { success: false, message: error?.message || 'ลงทะเบียนไม่สำเร็จ' };
+  }
+}
+
 export async function loadCloudUsers(): Promise<User[]> {
   if (typeof window === 'undefined') return [];
   try {
