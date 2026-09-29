@@ -22,33 +22,35 @@ function getCloudState(state: AppState): CloudState {
   return { rooms: state.rooms, students: state.students, assignments: state.assignments, submissions: state.submissions, attendance: state.attendance, subjects: state.subjects, users: state.users, sheetsConfig: state.sheetsConfig };
 }
 
-async function fetchJson(url: string): Promise<any> {
-  const response = await fetch(url, { method: 'GET', cache: 'no-store', headers: { Accept: 'application/json' } });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  return response.json();
+async function fetchJson(url: string, options: RequestInit = {}): Promise<any> {
+  const response = await fetch(url, { cache: 'no-store', ...options, headers: { Accept: 'application/json', ...(options.headers || {}) } });
+  const data = await response.json().catch(() => null);
+  if (!response.ok || data?.success === false) {
+    throw new Error(data?.message || `HTTP ${response.status}`);
+  }
+  return data;
 }
 
-function jsonp<T>(url: string): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const callback = `__nswCareJsonp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-    const script = document.createElement('script');
-    const timer = window.setTimeout(() => { cleanup(); reject(new Error('JSONP timeout')); }, 15000);
-    const cleanup = () => { window.clearTimeout(timer); script.remove(); try { delete (window as any)[callback]; } catch { (window as any)[callback] = undefined; } };
-    (window as any)[callback] = (data: T) => { cleanup(); resolve(data); };
-    script.onerror = () => { cleanup(); reject(new Error('JSONP request failed')); };
-    script.src = `${url}?action=getState&callback=${encodeURIComponent(callback)}&_=${Date.now()}`;
-    document.head.appendChild(script);
-  });
+function sanitizeCloudState(data: CloudState): CloudState {
+  const sampleAssignmentIds = new Set(['asg-01','asg-02','asg-03','asg-04','asg-05']);
+  const sampleStudentIds = new Set(['std-p1-doen','std-p1-02','std-p1-03','std-p1-04','std-p1-05','std-p1-06','std-p1-07','std-p1-08','std-p1-09','std-p1-10','std-p2-01','std-p2-02','std-k1-01']);
+  const sampleUserIds = new Set(['usr-teacher-care','std-p1-doen']);
+  return {
+    ...data,
+    students: (data.students || []).filter((s:any) => !sampleStudentIds.has(String(s.id))),
+    assignments: (data.assignments || []).filter((a:any) => !sampleAssignmentIds.has(String(a.id))),
+    submissions: (data.submissions || []).filter((s:any) => !sampleAssignmentIds.has(String(s.assignmentId)) && !sampleStudentIds.has(String(s.studentId))),
+    attendance: (data.attendance || []).filter((a:any) => !sampleStudentIds.has(String(a.studentId))),
+    users: (data.users || []).filter((u:any) => !sampleUserIds.has(String(u.id))),
+  };
 }
 
 export async function loadCloudState(): Promise<CloudState | null> {
   if (typeof window === 'undefined') return null;
   try {
-    let result: any;
-    try { result = await fetchJson(`${APPS_SCRIPT_URL}?action=getState&_=${Date.now()}`); }
-    catch { result = await jsonp<any>(APPS_SCRIPT_URL); }
-    if (!result?.success || !result.data) return null;
-    return result.data as CloudState;
+    const result = await fetchJson('/api/cloud-state?action=getState');
+    if (!result?.data) return null;
+    return sanitizeCloudState(result.data as CloudState);
   } catch (error) {
     console.warn('NSW CARE cloud load failed; keeping local data.', error);
     return null;
@@ -57,13 +59,11 @@ export async function loadCloudState(): Promise<CloudState | null> {
 
 export async function saveCloudState(state: AppState): Promise<void> {
   if (typeof window === 'undefined') return;
-  const payload = JSON.stringify(getCloudState(state));
   try {
-    await fetch(APPS_SCRIPT_URL, {
+    await fetchJson('/api/cloud-state', {
       method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-      body: new URLSearchParams({ action: 'saveState', payload }).toString(),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'saveState', payload: getCloudState(state) }),
       keepalive: true,
     });
   } catch (error) {
@@ -74,37 +74,30 @@ export async function saveCloudState(state: AppState): Promise<void> {
 export async function logCloudEvent(action: string, user: User | null, details: Record<string, unknown> = {}): Promise<void> {
   if (typeof window === 'undefined') return;
   try {
-    await fetch(APPS_SCRIPT_URL, {
+    await fetch('/api/cloud-state', {
       method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-      body: new URLSearchParams({
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         action: 'logEvent',
-        payload: JSON.stringify({ action, userId: user?.id || '', role: user?.role || '', name: user ? `${user.prefix || ''}${user.firstName} ${user.lastName || ''}`.trim() : '', details, timestamp: new Date().toISOString() }),
-      }).toString(),
+        payload: {
+          action,
+          userId: user?.id || '',
+          role: user?.role || '',
+          name: user ? `${user.prefix || ''}${user.firstName} ${user.lastName || ''}`.trim() : '',
+          details,
+          timestamp: new Date().toISOString(),
+        },
+      }),
       keepalive: true,
     });
   } catch {}
 }
 
-
 export async function loadCloudUsers(): Promise<User[]> {
   if (typeof window === 'undefined') return [];
   try {
-    const result = await fetchJson(`${APPS_SCRIPT_URL}?action=getUsers&_=${Date.now()}`);
-    if (Array.isArray(result?.data)) {
-      localStorage.setItem('nongdoen_care_cloud_users_v1', JSON.stringify(result.data));
-      return result.data as User[];
-    }
-  } catch {
-    // Fall back to the last successful cloud user list.
-  }
-  try {
-    const cached = localStorage.getItem('nongdoen_care_cloud_users_v1');
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      if (Array.isArray(parsed)) return parsed as User[];
-    }
+    const result = await fetchJson('/api/cloud-state?action=getUsers');
+    if (Array.isArray(result?.data)) return result.data as User[];
   } catch {}
   return [];
 }
@@ -112,42 +105,13 @@ export async function loadCloudUsers(): Promise<User[]> {
 export async function registerCloudUser(user: User): Promise<void> {
   if (typeof window === 'undefined') return;
   try {
-    const raw = localStorage.getItem('nongdoen_care_cloud_users_v1');
-    const users: User[] = raw ? JSON.parse(raw) : [];
-    const next = [...users.filter(existing => existing.id !== user.id), user];
-    localStorage.setItem('nongdoen_care_cloud_users_v1', JSON.stringify(next));
-  } catch {}
-  const payload = JSON.stringify(user);
-  try {
-    await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-      body: new URLSearchParams({ action: 'registerUser', payload }).toString(),
-      keepalive: true,
+    await fetch('/api/cloud-state', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'registerUser',payload:user}),
+      keepalive:true,
     });
-  } catch (error) {
-    console.warn('NSW CARE account save failed.', error);
-  }
-}
-
-
-export async function registerCloudAccount(user: User, password: string): Promise<{success:boolean; message?:string}> {
-  if (typeof window === 'undefined') return {success:false,message:'Browser only'};
-  try {
-    const response=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'register',user,password})});
-    const result=await response.json();
-    return response.ok && result?.success ? {success:true} : {success:false,message:result?.message || 'ลงทะเบียนไม่สำเร็จ'};
-  } catch { return {success:false,message:'เชื่อมต่อระบบบัญชีไม่ได้ กรุณาลองใหม่อีกครั้ง'}; }
-}
-
-export async function loginCloudUser(email: string, password: string): Promise<{success:boolean; user?:User; message?:string}> {
-  if (typeof window === 'undefined') return {success:false,message:'Browser only'};
-  try {
-    const response=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',email:email.trim().toLowerCase(),password})});
-    const result=await response.json();
-    return response.ok && result?.success && result.user ? {success:true,user:result.user as User} : {success:false,message:result?.message || 'เข้าสู่ระบบไม่สำเร็จ'};
-  } catch { return {success:false,message:'เชื่อมต่อระบบบัญชีไม่ได้ กรุณาลองใหม่อีกครั้ง'}; }
+  } catch {}
 }
 
 export async function loadLineChats(): Promise<import('../types').LineChat[]> {
