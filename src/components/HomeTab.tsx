@@ -148,7 +148,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                   <span>0910610997</span>
                 </a>
                 <a
-                  href="https://youtube.com/@nongdoen473?si=8eBwG6yslxnSZ2Mn"
+                  href="https://youtube.com/@594zqcbi473?si=8eBwG6yslxnSZ2Mn"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 bg-red-50 px-2.5 py-1 rounded-xl text-red-600 border border-red-200 font-bold hover:bg-red-100 transition-colors"
@@ -713,7 +713,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               {/* Action Bar */}
               <div className="flex flex-wrap items-center gap-3 pt-1">
                 <a
-                  href="https://line.me/R/ti/p/@nongdoen"
+                  href="https://line.me/R/ti/p/@594zqcbi?oat_content=url&ts=09292254"
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={playClick}
@@ -726,10 +726,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({
 
                 <div className="flex items-center gap-2 bg-slate-100 px-3.5 py-2 rounded-xl border border-slate-200 text-xs">
                   <span className="font-semibold text-slate-500">LINE ID:</span>
-                  <code className="font-mono font-bold text-slate-800 select-all">@nongdoen</code>
+                  <code className="font-mono font-bold text-slate-800 select-all">@594zqcbi</code>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText('@nongdoen');
+                      navigator.clipboard.writeText('@594zqcbi');
                       setCopiedLine(true);
                       setTimeout(() => setCopiedLine(false), 2000);
                       playSuccess();
@@ -747,7 +747,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             <div className="lg:col-span-4 bg-gradient-to-b from-emerald-50 to-white p-4 rounded-2xl border-2 border-emerald-200 text-center flex flex-col items-center justify-center space-y-2.5">
               <div className="w-40 h-40 bg-white p-2 rounded-2xl shadow-sm border-2 border-emerald-300 flex flex-col items-center justify-center relative group">
                 <img
-                  src="/line_oa_qr.png"
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent('https://line.me/R/ti/p/@594zqcbi?oat_content=url&ts=09292254')}`}
                   alt="QR Code LINE OA โรงเรียนหนองเดิ่นศรีเจริญวิทยา"
                   className="w-full h-full object-contain rounded-xl"
                 />
@@ -756,7 +756,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                 สแกน QR Code เพื่อเชื่อมต่อ LINE OA
               </p>
               <p className="text-[10px] text-slate-500">
-                หรือค้นหา LINE ID: <strong className="text-emerald-700">@nongdoen</strong>
+                หรือค้นหา LINE ID: <strong className="text-emerald-700">@594zqcbi</strong>
               </p>
             </div>
           </div>
