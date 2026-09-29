@@ -25,6 +25,7 @@ interface GradingTabProps {
   submissions: Submission[];
   subjects: Subject[];
   onAddAssignment: (asg: Assignment) => void;
+  onDeleteAssignment: (assignmentId: string) => void;
   onGradeSubmission: (
     assignmentId: string,
     studentId: string,
@@ -43,6 +44,7 @@ export const GradingTab: React.FC<GradingTabProps> = ({
   submissions,
   subjects,
   onAddAssignment,
+  onDeleteAssignment,
   onGradeSubmission,
   onViewImage,
   onOpenSheetsModal,
@@ -189,6 +191,15 @@ export const GradingTab: React.FC<GradingTabProps> = ({
                   </option>
                 ))}
               </select>
+              {currentAssignment && (
+                <button
+                  type="button"
+                  onClick={() => onDeleteAssignment(currentAssignment.id)}
+                  className="px-3 py-2 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 text-xs font-bold"
+                >
+                  ลบการบ้าน
+                </button>
+              )}
             ) : (
               <span className="text-xs text-slate-400">ยังไม่มีการบ้านในห้องนี้</span>
             )}
