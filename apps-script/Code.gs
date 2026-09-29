@@ -529,7 +529,6 @@ function registerUser(user) {
     const sheet=getOrCreateSheet(ss,'Users',SCHEMAS.Users);
     const email=String(user.email || '').trim().toLowerCase();
     if(!email) throw new Error('Email is required');
-    if(existingIndex>=0 && String(values[existingIndex][3] || '').trim().toLowerCase()===email && user.id && String(values[existingIndex][0] || '')!==String(user.id) && user.password) throw new Error('อีเมลนี้มีบัญชีอยู่แล้ว');
     const lastRow=sheet.getLastRow();
     const values=lastRow>=2 ? sheet.getRange(2,1,lastRow-1,SCHEMAS.Users.length).getValues() : [];
     let existingIndex=-1, existingPasswordHash='';
@@ -539,6 +538,9 @@ function registerUser(user) {
       if((user.id && rowId===String(user.id)) || rowEmail===email){
         existingIndex=i; existingPasswordHash=String(values[i][16] || ''); break;
       }
+    }
+    if(existingIndex>=0 && String(values[existingIndex][3] || '').trim().toLowerCase()===email && user.id && String(values[existingIndex][0] || '')!==String(user.id) && user.password) {
+      throw new Error('อีเมลนี้มีบัญชีอยู่แล้ว');
     }
     const passwordHash=user.passwordHash || (user.password ? hashPassword_(user.password) : '') || existingPasswordHash;
     const row=[
