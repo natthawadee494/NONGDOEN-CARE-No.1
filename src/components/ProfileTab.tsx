@@ -23,6 +23,7 @@ import {
 import { AppState, ThemeColor, User, Assignment, GoogleSheetsConfig } from '../types';
 import { playClick, playSuccess, triggerConfetti } from '../utils/audio';
 import { exportBackupJson } from '../utils/storage';
+import { compressImageDataUrl } from '../utils/image';
 import {
   fetchAssignmentsFromGoogleSheets,
   exportAssignmentsToCsv,
@@ -148,32 +149,16 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
     triggerConfetti();
   };
 
-  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Resize/compress avatar before storing it in AppState.
-    // This keeps Google Sheets AppState under the cell-size limit.
-    const img = new Image();
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      img.onload = () => {
-        const maxSize = 256;
-        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(img.width * scale));
-        canvas.height = Math.max(1, Math.round(img.height * scale));
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const compressed = canvas.toDataURL('image/webp', 0.75);
-        setAvatarUrl(compressed);
-      };
-      img.src = String(reader.result);
-    };
-
-    reader.readAsDataURL(file);
+    try {
+      const compressed = await compressImageDataUrl(file, 512, 30000);
+      setAvatarUrl(compressed);
+    } catch (error) {
+      console.error(error);
+      alert('ไม่สามารถประมวลผลรูปโปรไฟล์ได้');
+    }
   };
 
   const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
