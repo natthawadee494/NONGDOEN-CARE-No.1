@@ -161,7 +161,7 @@ export default function App() {
         currentUser: user,
         currentRoom: user.role === 'student' && user.room ? user.room : prev.currentRoom,
         users: nextUsers,
-        activeTab: user.role === 'student' ? 'student-portal' : 'home',
+        activeTab: 'home',
       };
       return nextState;
     });
@@ -222,20 +222,6 @@ export default function App() {
     setRegisterRole(rolePreset);
     setIsLoginModalOpen(false);
     setIsRegisterModalOpen(true);
-  };
-
-  // Role switcher
-  // Authentication is account-based, so a logged-in account cannot silently
-  // change from teacher to student (or vice versa). Keep the existing UI
-  // control safe by informing the user instead of switching identity.
-  const handleSwitchRole = (role: 'teacher' | 'student') => {
-    if (!appState.currentUser) return;
-    if (appState.currentUser.role === role) return;
-    showToast(
-      role === 'teacher'
-        ? 'บัญชีนี้เป็นบัญชีนักเรียน กรุณาออกจากระบบแล้วเข้าสู่บัญชีครู'
-        : 'บัญชีนี้เป็นบัญชีครู กรุณาออกจากระบบแล้วเข้าสู่บัญชีนักเรียน'
-    );
   };
 
   // Attendance update
@@ -618,7 +604,6 @@ export default function App() {
         currentUser={appState.currentUser}
         onLogout={handleLogout}
         onOpenMarchModal={() => setIsMarchModalOpen(true)}
-        onSwitchRole={handleSwitchRole}
         sheetsConfig={appState.sheetsConfig}
         onOpenLogin={() => setIsLoginModalOpen(true)}
         isMobileOpen={isMobileSidebarOpen}
@@ -634,7 +619,6 @@ export default function App() {
           onOpenProfile={() => handleTabChange('profile')}
           onOpenLogin={() => setIsLoginModalOpen(true)}
           onLogout={handleLogout}
-          onSwitchRole={handleSwitchRole}
         />
 
         {/* Content Tabs Container */}
