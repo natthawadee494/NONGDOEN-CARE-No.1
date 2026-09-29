@@ -148,13 +148,12 @@ export default function App() {
     setGlobalAudioEnabled(appState.soundEnabled);
   }, [appState.soundEnabled]);
 
-  // Safeguard role tabs: if student, can only view home, student-portal, profile
+  // Safeguard role tabs: if student, can only view home or student-portal
   useEffect(() => {
     if (
       appState.currentUser?.role === 'student' &&
       appState.activeTab !== 'home' &&
-      appState.activeTab !== 'student-portal' &&
-      appState.activeTab !== 'profile'
+      appState.activeTab !== 'student-portal'
     ) {
       setAppState((prev) => ({ ...prev, activeTab: 'home' }));
     }
