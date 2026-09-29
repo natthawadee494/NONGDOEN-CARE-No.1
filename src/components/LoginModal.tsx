@@ -139,7 +139,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
               </button>
             </div>
           </div>
-        )
+        )}
 
         <div className="border-t border-slate-100 pt-3 text-center">
           <p className="text-xs text-slate-500">ยังไม่มีบัญชี?{' '}
