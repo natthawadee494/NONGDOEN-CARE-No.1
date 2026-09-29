@@ -132,6 +132,19 @@ export async function registerCloudAccount(
   }
 }
 
+export async function setInitialCloudPassword(email: string, password: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    const result = await fetchJson('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'setInitialPassword', email: email.trim().toLowerCase(), password }),
+    });
+    return { success: result?.success === true, message: result?.message };
+  } catch (error: any) {
+    return { success: false, message: error?.message || 'ตั้งรหัสผ่านไม่สำเร็จ' };
+  }
+}
+
 export async function loadCloudUsers(): Promise<User[]> {
   if (typeof window === 'undefined') return [];
   try {
