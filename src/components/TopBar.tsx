@@ -21,7 +21,6 @@ interface TopBarProps {
   onOpenProfile: () => void;
   onOpenLogin: () => void;
   onLogout: () => void;
-  onSwitchRole: (role: 'teacher' | 'student') => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -30,7 +29,6 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenProfile,
   onOpenLogin,
   onLogout,
-  onSwitchRole,
 }) => {
   const [muted, setMutedState] = useState(isMuted());
   const [dateStr, setDateStr] = useState('');
@@ -166,38 +164,6 @@ export const TopBar: React.FC<TopBarProps> = ({
                   </span>
                 </div>
               </button>
-
-              {/* Quick Role Switch Buttons */}
-              <div className="hidden lg:flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700 text-[10px]">
-                <button
-                  onClick={() => {
-                    playClick();
-                    onSwitchRole('teacher');
-                  }}
-                  className={`px-2 py-0.5 rounded-md font-bold transition-colors cursor-pointer ${
-                    currentUser.role === 'teacher'
-                      ? 'bg-rose-600 text-white'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                  title="สลับเป็น ครูแคร์"
-                >
-                  ครูแคร์
-                </button>
-                <button
-                  onClick={() => {
-                    playClick();
-                    onSwitchRole('student');
-                  }}
-                  className={`px-2 py-0.5 rounded-md font-bold transition-colors cursor-pointer ${
-                    currentUser.role === 'student'
-                      ? 'bg-rose-600 text-white'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                  title="สลับเป็น น้องเดิ่น"
-                >
-                  น้องเดิ่น
-                </button>
-              </div>
 
               <button
                 onClick={() => {
