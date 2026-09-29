@@ -63,12 +63,6 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, role, onCl
       avatarSize: 96,
     };
 
-    const exists = await import('../utils/cloudSync').then(({ loadCloudUsers }) => loadCloudUsers());
-    if (exists.some(u => (u.email || '').trim().toLowerCase() === normalizedEmail)) {
-      alert('อีเมลนี้มีบัญชีอยู่แล้ว กรุณาเข้าสู่ระบบ');
-      return;
-    }
-
     const result = await registerCloudAccount(user, password);
     if (!result.success) {
       alert(result.message || 'ลงทะเบียนไม่สำเร็จ');
