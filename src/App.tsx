@@ -32,6 +32,7 @@ import { RegisterModal } from './components/RegisterModal';
 import { StudentDetailModal } from './components/StudentDetailModal';
 import { LineModal } from './components/LineModal';
 import { ProfileTab } from './components/ProfileTab';
+import { ExpManagerTab } from './components/ExpManagerTab';
 import { ImageViewerModal } from './components/ImageViewerModal';
 import { SchoolMarchModal } from './components/SchoolMarchModal';
 import { playClick, playSuccess, setGlobalAudioEnabled } from './utils/audio';
@@ -155,7 +156,8 @@ export default function App() {
       appState.currentUser?.role === 'student' &&
       appState.activeTab !== 'home' &&
       appState.activeTab !== 'student-portal' &&
-      appState.activeTab !== 'profile'
+      appState.activeTab !== 'profile' &&
+      appState.activeTab !== 'exp-manager'
     ) {
       setAppState((prev) => ({ ...prev, activeTab: 'home' }));
     }
@@ -363,15 +365,31 @@ export default function App() {
     showToast(`บันทึกการมาเรียนครบทุกคนในชั้น ${room} แล้ว`);
   };
 
-  // Reward EXP
+  // EXP adjustment with reason
   const handleRewardExp = (studentId: string, expAmount: number) => {
-    setAppState((prev) => ({
-      ...prev,
-      students: prev.students.map((s) =>
-        s.id === studentId ? { ...s, exp: (s.exp || 0) + expAmount } : s
-      ),
-    }));
-    showToast(`เพิ่ม +${expAmount} EXP คะแนนความดีแล้ว!`);
+    handleAdjustExp(studentId, expAmount, expAmount >= 0 ? 'ให้คะแนนความดี' : 'หักคะแนนความดี');
+  };
+
+  const handleAdjustExp = (studentId: string, amount: number, reason: string) => {
+    const safeAmount = Number(amount);
+    if (!Number.isFinite(safeAmount) || safeAmount === 0) return;
+    setAppState((prev) => {
+      const nextStudents = prev.students.map((s) =>
+        s.id === studentId ? { ...s, exp: Math.max(0, (s.exp || 0) + safeAmount) } : s
+      );
+      const target = prev.students.find((s) => s.id === studentId);
+      if (target) {
+        void logCloudEvent('EXP_ADJUST', prev.currentUser, {
+          studentId,
+          studentName: `${target.firstName} ${target.lastName}`,
+          amount: safeAmount,
+          reason,
+          room: target.room,
+        });
+      }
+      return { ...prev, students: nextStudents };
+    });
+    showToast(`${safeAmount > 0 ? 'เพิ่ม' : 'ลด'} ${Math.abs(safeAmount)} EXP — ${reason}`);
   };
 
   // Add Assignment
@@ -687,6 +705,14 @@ export default function App() {
 
           {appState.activeTab === 'profile' && (
             <ProfileTab currentUser={appState.currentUser} onUpdateUser={handleUpdateUser} />
+          )}
+
+          {appState.activeTab === 'exp-manager' && appState.currentUser?.role === 'teacher' && (
+            <ExpManagerTab
+              currentRoom={appState.currentRoom}
+              students={appState.students}
+              onAdjustExp={handleAdjustExp}
+            />
           )}
 
           {appState.activeTab === 'student-portal' && (
