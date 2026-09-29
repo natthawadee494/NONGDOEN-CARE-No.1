@@ -17,7 +17,10 @@ async function callAppsScript(action:string, payload:any) {
   });
   const text = await response.text();
   let data:any;
-  try { data=JSON.parse(text); } catch { throw new Error('Apps Script returned invalid JSON'); }
+  try { data=JSON.parse(text); } catch {
+    const preview = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 240);
+    throw new Error(`Apps Script ไม่ได้ส่ง JSON (HTTP ${response.status})${preview ? `: ${preview}` : ''}`);
+  }
   if (!response.ok || data?.success === false) throw new Error(data?.message || `Apps Script HTTP ${response.status}`);
   return data;
 }
