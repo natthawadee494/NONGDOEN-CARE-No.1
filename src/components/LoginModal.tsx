@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { LogIn, Mail, Lock, ArrowRight } from 'lucide-react';
 import { User } from '../types';
 import { playClick, playSuccess } from '../utils/audio';
-import { loadCloudUsers, loginCloudUser } from '../utils/cloudSync';
+import { loginCloudUser, setInitialCloudPassword } from '../utils/cloudSync';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -17,6 +17,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
   const [activeTab, setActiveTab] = useState<'teacher' | 'student'>(rolePreset);
   const [email, setEmail] = useState(() => localStorage.getItem('nongdoen_remember_email') || '');
   const [password, setPassword] = useState('');
+  const [setupPasswordMode, setSetupPasswordMode] = useState(false);
+  const [setupPassword, setSetupPassword] = useState('');
+  const [setupPasswordConfirm, setSetupPasswordConfirm] = useState('');
   const [rememberLogin, setRememberLogin] = useState(() => localStorage.getItem('nongdoen_remember_login') === '1');
 
   React.useEffect(() => {
@@ -35,6 +38,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
 
     const result = await loginCloudUser(normalizedEmail, password);
     if (!result.success || !result.user) {
+      if ((result.message || '').includes('ยังไม่ได้ตั้งรหัสผ่าน')) {
+        setSetupPasswordMode(true);
+        setSetupPassword('');
+        setSetupPasswordConfirm('');
+        return;
+      }
       alert(result.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
       return;
     }
@@ -98,10 +107,39 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
             จำอีเมลสำหรับครั้งถัดไป
           </label>
 
-          <button type="submit" className={`w-full py-3 rounded-xl text-white font-black text-sm shadow-md flex items-center justify-center gap-2 ${activeTab === 'teacher' ? 'bg-slate-900 hover:bg-slate-800' : 'bg-rose-600 hover:bg-rose-700'}`}>
-            <LogIn className="w-4 h-4" /> เข้าสู่ระบบ{activeTab === 'teacher' ? 'คุณครู' : 'นักเรียน'}
-          </button>
+          {!setupPasswordMode ? (
+            <button type="submit" className={`w-full py-3 rounded-xl text-white font-black text-sm shadow-md flex items-center justify-center gap-2 ${activeTab === 'teacher' ? 'bg-slate-900 hover:bg-slate-800' : 'bg-rose-600 hover:bg-rose-700'}`}>
+              <LogIn className="w-4 h-4" /> เข้าสู่ระบบ{activeTab === 'teacher' ? 'คุณครู' : 'นักเรียน'}
+            </button>
+          ) : null}
         </form>
+
+        {setupPasswordMode && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 space-y-3">
+            <div>
+              <p className="font-black text-amber-900 text-sm">ตั้งรหัสผ่านครั้งแรก</p>
+              <p className="text-[11px] text-amber-800 mt-1">พบบัญชีนี้แล้ว แต่ยังไม่มีรหัสผ่าน สามารถตั้งรหัสผ่านสำหรับบัญชีเดิมได้เลย</p>
+            </div>
+            <input type="password" minLength={6} value={setupPassword} onChange={e => setSetupPassword(e.target.value)} placeholder="รหัสผ่านใหม่ (อย่างน้อย 6 ตัว)" className="w-full bg-white border border-amber-200 rounded-xl px-3 py-3 text-sm outline-none" />
+            <input type="password" minLength={6} value={setupPasswordConfirm} onChange={e => setSetupPasswordConfirm(e.target.value)} placeholder="ยืนยันรหัสผ่านใหม่" className="w-full bg-white border border-amber-200 rounded-xl px-3 py-3 text-sm outline-none" />
+            <div className="flex gap-2">
+              <button type="button" onClick={async () => {
+                if (setupPassword.length < 6) return alert('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
+                if (setupPassword !== setupPasswordConfirm) return alert('รหัสผ่านทั้งสองช่องไม่ตรงกัน');
+                const saved = await setInitialCloudPassword(normalizedEmail, setupPassword);
+                if (!saved.success) return alert(saved.message || 'ตั้งรหัสผ่านไม่สำเร็จ');
+                alert('ตั้งรหัสผ่านสำเร็จ กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่');
+                setPassword('');
+                setSetupPasswordMode(false);
+              }} className="flex-1 py-2.5 rounded-xl bg-amber-500 text-white font-black text-xs">
+                ตั้งรหัสผ่าน
+              </button>
+              <button type="button" onClick={() => setSetupPasswordMode(false)} className="px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-xs">
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        )
 
         <div className="border-t border-slate-100 pt-3 text-center">
           <p className="text-xs text-slate-500">ยังไม่มีบัญชี?{' '}
