@@ -70,60 +70,55 @@ export default function App() {
     caption: '',
   });
 
-  // Load shared cloud data once, then persist every meaningful app-state change.
-  // currentUser / activeTab remain browser-local so one user's session never
-  // becomes the session for every other visitor.
+  // Restore the browser session immediately. Cloud data loads in the background
+  // so refresh/login never waits for a slow Apps Script cold start.
   useEffect(() => {
     let alive = true;
+    const rememberedUser = loadCurrentUser();
+
+    if (rememberedUser) {
+      setAppState((prev) => ({
+        ...prev,
+        currentUser: rememberedUser,
+        currentRoom: rememberedUser.role === 'student' && rememberedUser.room
+          ? rememberedUser.room
+          : prev.currentRoom,
+        activeTab: 'home',
+      }));
+    }
 
     (async () => {
       const remote = await loadCloudState();
-
       if (!alive) return;
 
-      const rememberedUser = loadCurrentUser();
-      let restoredUser: User | null = null;
-
-      if (rememberedUser) {
-        const remoteUsers = remote?.users?.length ? remote.users : await loadCloudUsers();
-        restoredUser =
-          remoteUsers.find(
-            (u) =>
-              u.id === rememberedUser.id ||
-              String(u.email || '').trim().toLowerCase() ===
-                String(rememberedUser.email || '').trim().toLowerCase(),
-          ) || null;
-      }
-
       if (remote) {
-        setAppState((prev) => ({
-          ...prev,
-          ...remote,
-          currentUser: restoredUser,
-          activeTab: restoredUser ? 'home' : 'home',
-          currentRoom:
-            restoredUser?.role === 'student' && restoredUser.room
-              ? restoredUser.room
-              : remote.currentRoom || prev.currentRoom || 'ป.1',
-        }));
-      } else if (restoredUser) {
-        setAppState((prev) => ({
-          ...prev,
-          currentUser: restoredUser,
-          currentRoom:
-            restoredUser?.role === 'student' && restoredUser.room
-              ? restoredUser.room
-              : prev.currentRoom,
-          activeTab: 'home',
-        }));
+        setAppState((prev) => {
+          const remembered = loadCurrentUser();
+          const restoredUser = remembered || prev.currentUser;
+          const remoteUsers = remote.users || [];
+          const matchedUser = restoredUser
+            ? remoteUsers.find(
+                (u) => u.id === restoredUser.id ||
+                  String(u.email || '').trim().toLowerCase() === String(restoredUser.email || '').trim().toLowerCase(),
+              ) || restoredUser
+            : null;
+
+          return {
+            ...prev,
+            ...remote,
+            currentUser: matchedUser,
+            activeTab: matchedUser ? prev.activeTab || 'home' : 'home',
+            currentRoom: matchedUser?.role === 'student' && matchedUser.room
+              ? matchedUser.room
+              : prev.currentRoom || 'ป.1',
+          };
+        });
       }
 
       setCloudReady(true);
     })();
 
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, []);
 
   useEffect(() => {
@@ -178,6 +173,8 @@ export default function App() {
 
   // Login handler
   const handleLogin = async (user: User) => {
+    // Persist the session immediately so a refresh does not force a new login.
+    saveCurrentUser(user);
     const remote = await loadCloudState();
     setAppState((prev) => {
       const base = remote ? { ...prev, ...remote } : prev;
@@ -214,6 +211,7 @@ export default function App() {
       };
       return nextState;
     });
+    saveCurrentUser(user);
     setIsLoginModalOpen(false);
     void logCloudEvent('LOGIN', user, { source: 'web' });
     showToast(`ยินดีต้อนรับ ${user.prefix || ''}${user.firstName}`);
