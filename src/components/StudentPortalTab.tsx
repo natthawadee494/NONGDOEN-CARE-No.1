@@ -398,7 +398,7 @@ export const StudentPortalTab: React.FC<StudentPortalTabProps> = ({
 
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 pt-1">
               <a
-                href="https://line.me/R/ti/p/@nongdoen"
+                href="https://line.me/R/ti/p/@594zqcbi?oat_content=url&ts=09292254"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={playClick}
@@ -411,10 +411,10 @@ export const StudentPortalTab: React.FC<StudentPortalTabProps> = ({
 
               <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 text-xs">
                 <span className="text-slate-500 font-semibold text-[11px]">LINE ID:</span>
-                <code className="font-mono font-bold text-slate-800">@nongdoen</code>
+                <code className="font-mono font-bold text-slate-800">@594zqcbi</code>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText('@nongdoen');
+                    navigator.clipboard.writeText('@594zqcbi');
                     setCopiedLine(true);
                     setTimeout(() => setCopiedLine(false), 2000);
                     playSuccess();
@@ -432,7 +432,7 @@ export const StudentPortalTab: React.FC<StudentPortalTabProps> = ({
           <div className="shrink-0 flex flex-col items-center bg-emerald-50/70 p-4 rounded-2xl border-2 border-emerald-300 shadow-xs">
             <div className="w-44 h-44 bg-white p-2.5 rounded-2xl shadow-sm border border-emerald-200 flex items-center justify-center">
               <img
-                src="/line_oa_qr.png"
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent('https://line.me/R/ti/p/@594zqcbi?oat_content=url&ts=09292254')}`}
                 alt="LINE OA QR Code โรงเรียนหนองเดิ่นศรีเจริญวิทยา"
                 className="w-full h-full object-contain rounded-xl"
               />
@@ -441,7 +441,7 @@ export const StudentPortalTab: React.FC<StudentPortalTabProps> = ({
               สแกน QR Code ด้วยกล้องหรือแอป LINE
             </span>
             <span className="text-[10px] text-slate-500 font-mono">
-              @nongdoen
+              @594zqcbi
             </span>
           </div>
         </div>
