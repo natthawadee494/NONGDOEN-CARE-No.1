@@ -7,7 +7,7 @@ import { loginCloudUser, setInitialCloudPassword } from '../utils/cloudSync';
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLogin: (user: User) => void;
+  onLogin: (user: User) => Promise<void> | void;
   onOpenRegister: (rolePreset: 'teacher' | 'student') => void;
   existingUsers: User[];
   rolePreset?: 'teacher' | 'student';
@@ -20,7 +20,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
   const [setupPasswordMode, setSetupPasswordMode] = useState(false);
   const [setupPassword, setSetupPassword] = useState('');
   const [setupPasswordConfirm, setSetupPasswordConfirm] = useState('');
-  const [rememberLogin, setRememberLogin] = useState(() => localStorage.getItem('nongdoen_remember_login') === '1');
+  const [submitting, setSubmitting] = useState(false);\n  const [rememberLogin, setRememberLogin] = useState(() => localStorage.getItem('nongdoen_remember_login') === '1');
 
   React.useEffect(() => {
     if (isOpen) setActiveTab(rolePreset);
@@ -62,8 +62,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
     }
 
     playSuccess();
-    onLogin(result.user);
+    await onLogin(result.user);
     onClose();
+  } finally {
+    setSubmitting(false);
+  }
   };
 
   return (
@@ -108,8 +111,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
           </label>
 
           {!setupPasswordMode ? (
-            <button type="submit" className={`w-full py-3 rounded-xl text-white font-black text-sm shadow-md flex items-center justify-center gap-2 ${activeTab === 'teacher' ? 'bg-slate-900 hover:bg-slate-800' : 'bg-rose-600 hover:bg-rose-700'}`}>
-              <LogIn className="w-4 h-4" /> เข้าสู่ระบบ{activeTab === 'teacher' ? 'คุณครู' : 'นักเรียน'}
+            <button type="submit" disabled={submitting} className={`w-full py-3 rounded-xl text-white font-black text-sm shadow-md flex items-center justify-center gap-2 ${activeTab === 'teacher' ? 'bg-slate-900 hover:bg-slate-800' : 'bg-rose-600 hover:bg-rose-700'}`}>
+              <LogIn className="w-4 h-4" /> {submitting ? 'กำลังเข้าสู่ระบบ…' : `เข้าสู่ระบบ${activeTab === 'teacher' ? 'คุณครู' : 'นักเรียน'}`}
             </button>
           ) : null}
         </form>
