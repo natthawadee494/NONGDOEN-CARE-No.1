@@ -521,140 +521,40 @@ function getSavedState() {
  *************************************************/
 
 function registerUser(user) {
-
-  if (!user) {
-    throw new Error('User data is missing');
-  }
-
-  const ss =
-    getSpreadsheet();
-
-  const sheet =
-    getOrCreateSheet(
-      ss,
-      'Users',
-      SCHEMAS.Users
-    );
-
-  let existingPasswordHash = '';
-  if (user.id && sheet.getLastRow() >= 2) {
-    const all = sheet.getRange(2, 1, sheet.getLastRow() - 1, SCHEMAS.Users.length).getValues();
-    const found = all.find(r => String(r[0] || '') === String(user.id));
-    existingPasswordHash = found ? String(found[16] || '') : '';
-  }
-
-  const row = [
-
-    user.id || '',
-
-    user.role || 'student',
-
-    user.login || '',
-
-    user.email || '',
-
-    user.prefix || '',
-
-    user.firstName || '',
-
-    user.lastName || '',
-
-    user.nickname || '',
-
-    user.room || '',
-
-    user.number == null
-      ? ''
-      : user.number,
-
-    user.phone || '',
-
-    user.bio || '',
-
-    user.exp == null
-      ? ''
-      : user.exp,
-
-    user.avatarUrl || '',
-
-    user.avatarSize == null
-      ? ''
-      : user.avatarSize,
-
-    user.themeColor || '',
-
-    user.passwordHash || existingPasswordHash || ''
-
-  ];
-
-
-  /*
-   * ถ้ามี UserId เดิม
-   * ให้ UPDATE แทนการสร้างซ้ำ
-   */
-
-  const lastRow =
-    sheet.getLastRow();
-
-  if (
-    lastRow >= 2 &&
-    user.id
-  ) {
-
-    const ids =
-      sheet
-        .getRange(
-          2,
-          1,
-          lastRow - 1,
-          1
-        )
-        .getValues();
-
-    for (
-      let i = 0;
-      i < ids.length;
-      i++
-    ) {
-
-      if (
-        String(ids[i][0]) ===
-        String(user.id)
-      ) {
-
-        sheet
-          .getRange(
-            i + 2,
-            1,
-            1,
-            row.length
-          )
-          .setValues([row]);
-
-        SpreadsheetApp.flush();
-
-        return;
+  if (!user) throw new Error('User data is missing');
+  const lock=LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss=getSpreadsheet();
+    const sheet=getOrCreateSheet(ss,'Users',SCHEMAS.Users);
+    const email=String(user.email || '').trim().toLowerCase();
+    if(!email) throw new Error('Email is required');
+    const lastRow=sheet.getLastRow();
+    const values=lastRow>=2 ? sheet.getRange(2,1,lastRow-1,SCHEMAS.Users.length).getValues() : [];
+    let existingIndex=-1, existingPasswordHash='';
+    for(let i=0;i<values.length;i++){
+      const rowEmail=String(values[i][3] || '').trim().toLowerCase();
+      const rowId=String(values[i][0] || '');
+      if((user.id && rowId===String(user.id)) || rowEmail===email){
+        existingIndex=i; existingPasswordHash=String(values[i][16] || ''); break;
       }
     }
-  }
-
-
-  /*
-   * เพิ่ม User ใหม่
-   */
-
-  sheet
-    .getRange(
-      sheet.getLastRow() + 1,
-      1,
-      1,
-      row.length
-    )
-    .setValues([row]);
-
-  SpreadsheetApp.flush();
+    const passwordHash=user.passwordHash || (user.password ? hashPassword_(user.password) : '') || existingPasswordHash;
+    if(!passwordHash) throw new Error('Password is required');
+    const row=[
+      user.id || (existingIndex>=0 ? values[existingIndex][0] : 'usr-'+Date.now()),
+      user.role || 'student', user.login || email, email,
+      user.prefix || '', user.firstName || '', user.lastName || '', user.nickname || '',
+      user.room || '', user.number==null ? '' : user.number, user.phone || '', user.bio || '',
+      user.exp==null ? '' : user.exp, user.avatarUrl || '', user.avatarSize==null ? '' : user.avatarSize,
+      user.themeColor || '', passwordHash
+    ];
+    if(existingIndex>=0) sheet.getRange(existingIndex+2,1,1,row.length).setValues([row]);
+    else sheet.getRange(sheet.getLastRow()+1,1,1,row.length).setValues([row]);
+    SpreadsheetApp.flush();
+    return {success:true,message:'User registered',userId:row[0]};
+  } finally { lock.releaseLock(); }
 }
-
 
 /*************************************************
  * READ USERS
@@ -1063,28 +963,16 @@ function hashPassword_(password) {
 }
 
 function loginUser(email, password) {
-  const normalizedEmail = String(email || '').trim().toLowerCase();
-  const hash = hashPassword_(password);
-  const users = readUsersInternal_(true);
-
-  const user = users.find(function(u) {
-    return String(u.email || '').trim().toLowerCase() === normalizedEmail;
-  });
-
-  if (!user) {
-    return { success: false, message: 'ไม่พบอีเมลนี้ในระบบ' };
-  }
-
-  if (!user._passwordHash) {
-    return { success: false, message: 'บัญชีนี้ยังไม่ได้ตั้งรหัสผ่าน กรุณาให้ผู้ดูแลระบบตั้งรหัสผ่านก่อน' };
-  }
-
-  if (user._passwordHash !== hash) {
-    return { success: false, message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' };
-  }
-
+  const normalizedEmail=String(email || '').trim().toLowerCase();
+  if(!normalizedEmail || !password) return {success:false,message:'กรุณากรอกอีเมลและรหัสผ่าน'};
+  const hash=hashPassword_(password);
+  const users=readUsersInternal_(true);
+  const user=users.find(function(u){return String(u.email || '').trim().toLowerCase()===normalizedEmail;});
+  if(!user) return {success:false,message:'ไม่พบอีเมลนี้ในระบบ'};
+  if(!user._passwordHash) return {success:false,message:'บัญชีนี้ยังไม่ได้ตั้งรหัสผ่าน'};
+  if(user._passwordHash!==hash) return {success:false,message:'อีเมลหรือรหัสผ่านไม่ถูกต้อง'};
   delete user._passwordHash;
-  return { success: true, user: user };
+  return {success:true,user:user};
 }
 
 function readUsersInternal_(includePassword) {
