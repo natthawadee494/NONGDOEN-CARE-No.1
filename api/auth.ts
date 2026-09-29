@@ -1,7 +1,15 @@
-const APPS_SCRIPT_URL = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbyjRXtsUKZprrFkCM9Z0R0Iffw137qzKL8y10Pz19SaeoQ1dwKwVwtVW8dFNu5yhp3Y/exec';
+const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyjRXtsUKZprrFkCM9Z0R0Iffw137qzKL8y10Pz19SaeoQ1dwKwVwtVW8dFNu5yhp3Y/exec';
+function getAppsScriptUrl() {
+  let value = String(process.env.APPS_SCRIPT_URL || DEFAULT_APPS_SCRIPT_URL).trim();
+  value = value.replace(/^\\[|\\]$/g, '');
+  const markdown = value.match(/^\\[[^\\]]*\\]\\((https?:\\/\\/[^)]+)\\)$/);
+  if (markdown) value = markdown[1];
+  if (!/^https?:\\/\\//i.test(value)) throw new Error('APPS_SCRIPT_URL ไม่ใช่ URL ที่ถูกต้อง');
+  return value;
+}
 
 async function callAppsScript(action:string, payload:any) {
-  const response = await fetch(APPS_SCRIPT_URL, {
+  const response = await fetch(getAppsScriptUrl(), {
     method:'POST',
     headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
     body:new URLSearchParams({action,payload:JSON.stringify(payload || {})}).toString(),
@@ -15,7 +23,7 @@ async function callAppsScript(action:string, payload:any) {
 }
 export default async function handler(req:any,res:any) {
   if(req.method!=='POST') return res.status(405).json({success:false,message:'Method not allowed'});
-  if(!process.env.APPS_SCRIPT_URL) return res.status(500).json({success:false,message:'APPS_SCRIPT_URL is not configured'});
+  try { getAppsScriptUrl(); } catch(error:any) { return res.status(500).json({success:false,message:error?.message || 'APPS_SCRIPT_URL is not configured'}); }
   try {
     const {action,email,password,user}=req.body || {};
     if(action==='login'){
