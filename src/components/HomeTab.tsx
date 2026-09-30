@@ -141,14 +141,14 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                   <span>ม.11 ต.หนองกอมเกาะ</span>
                 </span>
                 <a
-                  href="tel:0910610997"
+                  href="tel:0810497934"
                   className="inline-flex items-center gap-1 bg-pink-50/80 px-2.5 py-1 rounded-xl text-pink-700 border border-pink-200 font-bold hover:bg-pink-100 transition-colors"
                 >
                   <Phone className="w-3.5 h-3.5" />
-                  <span>0910610997</span>
+                  <span>0810497934</span>
                 </a>
                 <a
-                  href="https://youtube.com/@594zqcbi473?si=8eBwG6yslxnSZ2Mn"
+                  href="https://www.youtube.com/channel/UCwaK_0BAtERUgfceiES73JA"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 bg-red-50 px-2.5 py-1 rounded-xl text-red-600 border border-red-200 font-bold hover:bg-red-100 transition-colors"
@@ -561,7 +561,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               <br />
               หมู่ 11 ตำบลหนองกอมเกาะ อำเภอเมืองหนองคาย จังหวัดหนองคาย 43000
               <br />
-              โทรศัพท์: 0910610997
+              โทรศัพท์: 0810497934, 0918637337<br />\n              อีเมล: 1043660007@pracharath.ac.th
               <br />
               สังกัด สพป.หนองคาย เขต 1
             </p>
