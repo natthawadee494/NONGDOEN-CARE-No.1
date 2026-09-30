@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   TabType,
   AppState,
@@ -36,11 +36,13 @@ import { ExpManagerTab } from './components/ExpManagerTab';
 import { ImageViewerModal } from './components/ImageViewerModal';
 import { SchoolMarchModal } from './components/SchoolMarchModal';
 import { playClick, playSuccess, setGlobalAudioEnabled } from './utils/audio';
-import { loadCloudState, loadCloudUsers, saveCloudState, logCloudEvent } from './utils/cloudSync';
+import { loadCloudState, loadCloudUsers, saveCloudState, logCloudEvent, hasPendingCloudSave } from './utils/cloudSync';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>(() => getInitialAppState());
   const [cloudReady, setCloudReady] = useState(false);
+  const firstStateEffectRef = useRef(true);
+  const skipNextCloudSaveRef = useRef(false);
 
   // Mobile drawer state (3 ขีด / Hamburger menu)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -93,6 +95,13 @@ export default function App() {
       if (!alive) return;
 
       if (remote) {
+        // Never let an older cloud snapshot resurrect data the user has already
+        // changed locally while the cloud request was still running.
+        if (hasPendingCloudSave()) {
+          setCloudReady(true);
+          return;
+        }
+        skipNextCloudSaveRef.current = true;
         setAppState((prev) => {
           const remembered = loadCurrentUser();
           const restoredUser = remembered || prev.currentUser;
@@ -136,11 +145,24 @@ export default function App() {
   useEffect(() => {
     saveAppState(appState);
 
-    if (!cloudReady) return;
+    // Do not save the initial in-memory state before the first cloud snapshot
+    // arrives; that could overwrite the real Google Sheets state.
+    if (firstStateEffectRef.current) {
+      firstStateEffectRef.current = false;
+      return;
+    }
 
+    // Applying a fresh cloud snapshot is not a local edit.
+    if (skipNextCloudSaveRef.current) {
+      skipNextCloudSaveRef.current = false;
+      return;
+    }
+
+    // Local edits are saved even while the first cloud request is still loading.
+    // This queues the latest state and prevents stale cloud data from coming back.
     const timer = window.setTimeout(() => {
       void saveCloudState(appState);
-    }, 500);
+    }, 250);
 
     return () => window.clearTimeout(timer);
   }, [appState, cloudReady]);
@@ -228,17 +250,8 @@ export default function App() {
     void logCloudEvent('LOGIN', user, { source: 'web' });
     showToast(`ยินดีต้อนรับ ${user.prefix || ''}${user.firstName}`);
 
-    // Cloud reconciliation happens after the UI is usable, preventing slow/failed
-    // Apps Script requests from making login appear stuck.
-    void loadCloudState().then((remote) => {
-      if (!remote) return;
-      setAppState((prev) => ({
-        ...prev,
-        ...remote,
-        currentUser: user,
-        currentRoom: user.role === 'student' && user.room ? user.room : prev.currentRoom,
-      }));
-    });
+    // Cloud state is hydrated once at app startup. Avoid a second background
+    // snapshot here because it can race with an edit made immediately after login.
   };
 
   // Register handler: the server/API is the source of truth for account creation.
