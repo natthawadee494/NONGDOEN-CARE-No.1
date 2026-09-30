@@ -93,6 +93,10 @@ async function flushCloudSave(): Promise<void> {
   }
 }
 
+export function hasPendingCloudSave(): boolean {
+  return saveInFlight || queuedState !== null;
+}
+
 export async function saveCloudState(state: AppState): Promise<void> {
   if (typeof window === 'undefined') return;
   queuedState = state;
