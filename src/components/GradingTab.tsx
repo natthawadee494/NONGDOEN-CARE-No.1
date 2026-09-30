@@ -338,13 +338,6 @@ export const GradingTab: React.FC<GradingTabProps> = ({
                             <span>ดูรายละเอียดงาน</span>
                           </button>
                         ) : (
-                          <span
-                            className="text-[11px] text-slate-600 italic max-w-[120px] truncate block"
-                            title={sub.note}
-                          >
-                            "{sub.note}"
-                          </span>
-                        ) : (
                           <span className="text-slate-400 text-xs">-</span>
                         )}
                       </td>
