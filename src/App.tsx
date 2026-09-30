@@ -122,11 +122,14 @@ export default function App() {
           return {
             ...prev,
             ...remote,
-            students: mergeById(prev.students || [], remote.students || []),
-            assignments: mergeById(prev.assignments || [], remote.assignments || []),
-            submissions: mergeById(prev.submissions || [], remote.submissions || []),
-            attendance: mergeById(prev.attendance || [], remote.attendance || []),
-            subjects: mergeById(prev.subjects || [], remote.subjects || []),
+            // Cloud is the source of truth for shared collections.
+            // Do NOT merge old local records back in: that resurrects records
+            // that another account has deliberately deleted.
+            students: remote.students || [],
+            assignments: remote.assignments || [],
+            submissions: remote.submissions || [],
+            attendance: remote.attendance || [],
+            subjects: remote.subjects || [],
             users,
             currentUser: matchedUser,
             activeTab: matchedUser ? (prev.activeTab || 'home') : 'home',
