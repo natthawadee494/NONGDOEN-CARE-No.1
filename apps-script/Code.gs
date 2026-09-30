@@ -98,6 +98,12 @@ const SCHEMAS = {
     'Type',
     'Name',
     'LastSeenAt'
+  ],
+
+  DeletedRecords: [
+    'RecordType',
+    'RecordId',
+    'DeletedAt'
   ]
 };
 
@@ -353,20 +359,28 @@ function getOrCreateSheet(ss, name, headers) {
  *************************************************/
 
 function saveState(state) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
 
-  const ss = getSpreadsheet();
+  try {
+    const incoming = state || {};
 
-  const sheet =
-    getOrCreateSheet(
-      ss,
-      'AppState',
-      SCHEMAS.AppState
-    );
+    // Keep deletions permanent across accounts. A stale browser may still
+    // contain an item that another account already deleted; tombstones prevent
+    // that stale item from being written back into Sheets.
+    rememberMissingRecords_(incoming);
+    const cleanState = applyDeletionTombstones_(incoming);
 
-  writeStateSheet(sheet, state);
-  syncStateTables(state || {});
+    const ss = getSpreadsheet();
+    const sheet = getOrCreateSheet(ss, 'AppState', SCHEMAS.AppState);
 
-  SpreadsheetApp.flush();
+    writeStateSheet(sheet, cleanState);
+    syncStateTables(cleanState);
+
+    SpreadsheetApp.flush();
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 
@@ -909,6 +923,138 @@ function replaceDataSheet(name, headers, rows) {
   if (!rows.length) return;
 
   sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+}
+
+/*************************************************
+ * PERMANENT DELETION TOMBSTONES
+ *
+ * A full-state sync can otherwise resurrect deleted records when
+ * another account still has an older browser snapshot. This sheet
+ * remembers deleted IDs and filters them from every later save.
+ *************************************************/
+
+const TOMBSTONE_TYPES = [
+  'Students',
+  'Assignments',
+  'Submissions',
+  'Attendance',
+  'Subjects'
+];
+
+function getRecordId_(type, item) {
+  if (!item) return '';
+  if (type === 'Students') return String(item.id || '');
+  if (type === 'Assignments') return String(item.id || '');
+  if (type === 'Submissions') return String(item.id || '');
+  if (type === 'Attendance') return String(item.id || '');
+  if (type === 'Subjects') return String(item.id || '');
+  return '';
+}
+
+function getDeletedRecordKey_(type, id) {
+  return String(type) + '::' + String(id);
+}
+
+function getDeletedRecordMap_() {
+  const ss = getSpreadsheet();
+  const sheet = getOrCreateSheet(ss, 'DeletedRecords', SCHEMAS.DeletedRecords);
+  const map = {};
+  if (sheet.getLastRow() < 2) return map;
+
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 3).getValues();
+  rows.forEach(function(row) {
+    const type = String(row[0] || '');
+    const id = String(row[1] || '');
+    if (type && id) {
+      map[getDeletedRecordKey_(type, id)] = true;
+    }
+  });
+  return map;
+}
+
+function getExistingRecordIds_(type) {
+  const ss = getSpreadsheet();
+  const sheet = ss.getSheetByName(type);
+  if (!sheet || sheet.getLastRow() < 2) return [];
+
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+  return rows
+    .map(function(row) { return String(row[0] || '').trim(); })
+    .filter(Boolean);
+}
+
+function rememberMissingRecords_(state) {
+  const ss = getSpreadsheet();
+  const sheet = getOrCreateSheet(ss, 'DeletedRecords', SCHEMAS.DeletedRecords);
+  const existingTombstones = getDeletedRecordMap_();
+  const additions = [];
+
+  const collections = {
+    Students: Array.isArray(state.students) ? state.students : [],
+    Assignments: Array.isArray(state.assignments) ? state.assignments : [],
+    Submissions: Array.isArray(state.submissions) ? state.submissions : [],
+    Attendance: Array.isArray(state.attendance) ? state.attendance : [],
+    Subjects: Array.isArray(state.subjects) ? state.subjects : []
+  };
+
+  Object.keys(collections).forEach(function(type) {
+    const incomingIds = {};
+    collections[type].forEach(function(item) {
+      const id = getRecordId_(type, item);
+      if (id) incomingIds[id] = true;
+    });
+
+    getExistingRecordIds_(type).forEach(function(existingId) {
+      const key = getDeletedRecordKey_(type, existingId);
+      if (!incomingIds[existingId] && !existingTombstones[key]) {
+        additions.push([type, existingId, new Date()]);
+        existingTombstones[key] = true;
+      }
+    });
+  });
+
+  if (additions.length) {
+    sheet.getRange(sheet.getLastRow() + 1, 1, additions.length, 3).setValues(additions);
+  }
+}
+
+function applyDeletionTombstones_(state) {
+  const deleted = getDeletedRecordMap_();
+  const result = Object.assign({}, state);
+
+  result.students = (state.students || []).filter(function(item) {
+    return !deleted[getDeletedRecordKey_('Students', getRecordId_('Students', item))];
+  });
+
+  result.assignments = (state.assignments || []).filter(function(item) {
+    return !deleted[getDeletedRecordKey_('Assignments', getRecordId_('Assignments', item))];
+  });
+
+  const studentIds = {};
+  result.students.forEach(function(item) { studentIds[String(item.id || '')] = true; });
+
+  const assignmentIds = {};
+  result.assignments.forEach(function(item) { assignmentIds[String(item.id || '')] = true; });
+
+  result.submissions = (state.submissions || []).filter(function(item) {
+    const id = getRecordId_('Submissions', item);
+    const key = getDeletedRecordKey_('Submissions', id);
+    return !deleted[key]
+      && studentIds[String(item.studentId || '')]
+      && assignmentIds[String(item.assignmentId || '')];
+  });
+
+  result.attendance = (state.attendance || []).filter(function(item) {
+    const id = getRecordId_('Attendance', item);
+    return !deleted[getDeletedRecordKey_('Attendance', id)]
+      && studentIds[String(item.studentId || '')];
+  });
+
+  result.subjects = (state.subjects || []).filter(function(item) {
+    return !deleted[getDeletedRecordKey_('Subjects', getRecordId_('Subjects', item))];
+  });
+
+  return result;
 }
 
 function syncStateTables(state) {
