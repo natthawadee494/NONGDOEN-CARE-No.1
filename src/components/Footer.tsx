@@ -30,7 +30,7 @@ export const Footer: React.FC<FooterProps> = ({
               <br />
               หมู่ 11 ตำบลหนองกอมเกาะ อำเภอเมืองหนองคาย จังหวัดหนองคาย 43000
               <br />
-              โทรศัพท์: 0910610997
+              โทรศัพท์: 0810497934, 0918637337
               <br />
               สังกัด สพป.หนองคาย เขต 1
             </p>
@@ -172,16 +172,29 @@ export const Footer: React.FC<FooterProps> = ({
               </li>
               <li>
                 <a
-                  href="https://youtube.com/@nongdoen473?si=8eBwG6yslxnSZ2Mn"
+                  href="https://www.facebook.com/%E0%B9%82%E0%B8%A3%E0%B8%87%E0%B9%80%E0%B8%A3%E0%B8%B5%E0%B8%A2%E0%B8%99%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%AB%E0%B8%99%E0%B8%AD%E0%B8%87%E0%B9%80%E0%B8%94%E0%B8%B4%E0%B9%88%E0%B8%99-%E0%B8%95%E0%B8%B3%E0%B8%9A%E0%B8%A5%E0%B8%AB%E0%B8%99%E0%B8%AD%E0%B8%87%E0%B8%81%E0%B8%AD%E0%B8%A1%E0%B9%80%E0%B8%81%E0%B8%B2%E0%B8%B0-%E0%B8%AD%E0%B8%B3%E0%B9%80%E0%B8%A0%E0%B8%AD%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87%E0%B8%AB%E0%B8%99%E0%B8%AD%E0%B8%87%E0%B8%84%E0%B8%B2%E0%B8%A2-%E0%B8%88%E0%B8%B1%E0%B8%87%E0%B8%AB%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%AB%E0%B8%99%E0%B8%AD%E0%B8%87%E0%B8%84%E0%B8%B2%E0%B8%A2-2148206075427013/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-white transition-colors flex items-center gap-1.5"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                  <span>Facebook: โรงเรียนหนองเดิ่นศรีเจริญวิทยา</span>
+                  <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.youtube.com/channel/UCwaK_0BAtERUgfceiES73JA"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-red-400 hover:text-white transition-colors flex items-center gap-1.5"
                 >
                   <Youtube className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                  <span>YouTube รร.: @nongdoen473</span>
+                  <span>YouTube: NONG DOEN</span>
                   <ExternalLink className="w-2.5 h-2.5 opacity-60" />
                 </a>
               </li>
+              <li><span className="text-slate-300">อีเมล: 1043660007@pracharath.ac.th</span></li>
               <li>
                 <button
                   onClick={() => {
